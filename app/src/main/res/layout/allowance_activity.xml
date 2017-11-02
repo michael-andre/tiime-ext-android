@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import
+            alias="res"
+            type="com.cubber.tiime.utils.Resources" />
+
+        <import type="android.view.View" />
+
+        <variable
+            name="allowance"
+            type="com.cubber.tiime.model.MileageAllowance" />
+
+        <variable
+            name="vehicle"
+            type="com.google.common.base.Optional&lt;com.cubber.tiime.model.Vehicle>" />
+
+    </data>
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusableInTouchMode="true">
+
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <EditText
+                android:id="@+id/reason"
+                style="@style/Widget.EditText.Borderless"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing"
+                android:layout_marginEnd="@dimen/large_spacing"
+                android:layout_marginStart="@dimen/large_spacing"
+                android:hint="@string/allowance_reason_hint"
+                android:imeOptions="actionDone|flagNoExtractUi"
+                android:inputType="text|textPersonName|textCapSentences"
+                android:maxLines="1"
+                android:text="@={ allowance.reason }"
+                android:textAppearance="?android:textAppearanceMedium" />
+
+        </android.support.design.widget.AppBarLayout>
+
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="?android:listDivider"
+                android:orientation="vertical"
+                android:showDividers="middle">
+
+                <android.support.constraint.ConstraintLayout
+                    android:id="@+id/vehicle_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing"
+                    android:layout_marginTop="@dimen/spacing"
+                    android:background="?selectableItemBackground"
+                    android:clickable="@{ vehicle != null }"
+                    android:focusable="@{ vehicle != null }"
+                    android:minHeight="?listPreferredItemHeightSmall">
+
+                    <ImageView
+                        android:id="@+id/vehicle_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/activity_margin"
+                        android:layout_marginStart="@dimen/activity_margin"
+                        android:tint="@android:color/darker_gray"
+                        android:visibility="@{ vehicle.isPresent() ? View.INVISIBLE : View.VISIBLE }"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_car_24dp" />
+
+                    <ImageView
+                        android:id="@+id/vehicle_type_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:contentDescription="@{ res.vehicleTypeName(context, vehicle.get().type) }"
+                        android:src="@{ res.vehicleTypeIcon(context, vehicle.get().type) }"
+                        app:layout_constraintBottom_toBottomOf="@id/vehicle_icon"
+                        app:layout_constraintEnd_toEndOf="@id/vehicle_icon"
+                        app:layout_constraintStart_toStartOf="@id/vehicle_icon"
+                        app:layout_constraintTop_toTopOf="@id/vehicle_icon"
+                        app:visible="@{ vehicle.isPresent() }"
+                        tools:src="@drawable/ic_vehicle_type_car" />
+
+                    <TextView
+                        android:id="@+id/vehicle_name"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/activity_margin"
+                        android:layout_marginLeft="@dimen/form_spacing"
+                        android:layout_marginRight="@dimen/activity_margin"
+                        android:layout_marginStart="@dimen/form_spacing"
+                        android:text="@{ vehicle.isPresent() ? vehicle.get().name : @string/add_vehicle }"
+                        android:textAppearance="?attr/textAppearanceListItemSmall"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/vehicle_icon"
+                        app:layout_constraintTop_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_chainStyle="packed"
+                        tools:text="Ma Porsche" />
+
+                    <!--<TextView
+                        android:id="@+id/vehicle_power"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@{ vehicle != null ? @string/power_format(vehicle.fiscal_power) : null }"
+                        android:textAppearance="?android:textAppearanceSmall"
+                        android:textColor="?android:textColorSecondary"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="@id/vehicle_name"
+                        app:layout_constraintStart_toStartOf="@id/vehicle_name"
+                        app:layout_constraintTop_toBottomOf="@+id/vehicle_name"
+                        tools:text="Puissance fiscale : 5" />-->
+
+                    <android.support.v4.widget.ContentLoadingProgressBar
+                        style="?android:progressBarStyleSmall"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/activity_margin"
+                        android:layout_marginRight="@dimen/activity_margin"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:visible="@{ vehicle == null }" />
+
+                </android.support.constraint.ConstraintLayout>
+
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing"
+                    android:layout_marginTop="@dimen/spacing"
+                    android:animateLayoutChanges="true"
+                    tools:layout_editor_absoluteX="0dp"
+                    tools:layout_editor_absoluteY="65dp">
+
+                    <ImageView
+                        android:id="@+id/location_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/activity_margin"
+                        android:layout_marginStart="@dimen/activity_margin"
+                        android:layout_marginTop="@dimen/spacing"
+                        android:tint="@android:color/darker_gray"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/arrival_address"
+                        app:layout_goneMarginTop="12dp"
+                        app:srcCompat="@drawable/ic_location_24dp" />
+
+                    <ImageView
+                        android:id="@+id/location_start_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/activity_margin"
+                        android:layout_marginStart="@dimen/activity_margin"
+                        android:layout_marginTop="@dimen/spacing"
+                        android:tint="@android:color/darker_gray"
+                        android:visibility="gone"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/starting_address"
+                        app:srcCompat="@drawable/ic_location_start_24dp"
+                        tools:visibility="visible" />
+
+                    <com.wapplix.widget.InstantAutoCompleteTextView
+                        android:id="@+id/starting_address"
+                        style="@style/Widget.EditText.Borderless"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/activity_margin"
+                        android:layout_marginLeft="@dimen/form_spacing"
+                        android:layout_marginRight="@dimen/large_spacing"
+                        android:layout_marginStart="@dimen/form_spacing"
+                        android:completionThreshold="1"
+                        android:hint="@string/starting_address"
+                        android:imeOptions="actionNext|flagNoExtractUi"
+                        android:inputType="text|textPostalAddress|textCapSentences"
+                        android:maxLines="2"
+                        android:nextFocusForward="@id/arrival_address"
+                        android:text="@={ allowance.from }"
+                        android:textAppearance="?attr/textAppearanceListItemSmall"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toTopOf="@id/arrival_address"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/location_icon"
+                        app:layout_constraintTop_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_chainStyle="packed"
+                        tools:visibility="visible" />
+
+                    <com.wapplix.widget.InstantAutoCompleteTextView
+                        android:id="@+id/arrival_address"
+                        style="@style/Widget.EditText.Borderless"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/arrival_address"
+                        android:imeOptions="actionDone|flagNoExtractUi"
+                        android:inputType="text|textPostalAddress|textCapSentences"
+                        android:maxLines="2"
+                        android:text="@={ allowance.to }"
+                        android:textAppearance="?attr/textAppearanceListItemSmall"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toTopOf="@id/map"
+                        app:layout_constraintEnd_toEndOf="@id/starting_address"
+                        app:layout_constraintStart_toStartOf="@id/starting_address"
+                        app:layout_constraintTop_toBottomOf="@id/starting_address"
+                        tools:visibility="visible" />
+
+                    <com.google.android.gms.maps.MapView
+                        android:id="@+id/map"
+                        android:layout_width="0dp"
+                        android:layout_height="156dp"
+                        android:layout_marginBottom="@dimen/small_spacing"
+                        android:layout_marginTop="@dimen/small_spacing"
+                        android:background="?colorButtonNormal"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toTopOf="@id/distance"
+                        app:layout_constraintEnd_toEndOf="@id/arrival_address"
+                        app:layout_constraintStart_toStartOf="@id/arrival_address"
+                        app:layout_constraintTop_toBottomOf="@id/arrival_address"
+                        app:liteMode="true"
+                        app:mapType="normal"
+                        tools:visibility="invisible" />
+
+                    <android.support.v4.widget.ContentLoadingProgressBar
+                        android:id="@+id/map_progress"
+                        style="?android:progressBarStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="@dimen/spacing"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toBottomOf="@id/map"
+                        app:layout_constraintEnd_toEndOf="@id/map"
+                        app:layout_constraintStart_toStartOf="@id/map"
+                        app:layout_constraintTop_toTopOf="@id/map"
+                        tools:visibility="visible" />
+
+                    <TextView
+                        android:id="@+id/distance_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/form_spacing"
+                        android:layout_marginStart="@dimen/form_spacing"
+                        android:labelFor="@id/distance"
+                        android:text="@string/distance_prompt"
+                        android:textAppearance="?attr/textAppearanceListItemSmall"
+                        app:layout_constraintBottom_toBottomOf="@id/distance"
+                        app:layout_constraintStart_toEndOf="@id/location_icon"
+                        app:layout_constraintTop_toTopOf="@id/distance" />
+
+                    <com.wapplix.widget.NumberEditText
+                        android:id="@+id/distance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/spacing"
+                        android:layout_marginStart="@dimen/spacing"
+                        android:gravity="end"
+                        android:imeOptions="actionDone"
+                        android:inputType="number"
+                        android:maxLength="5"
+                        android:maxLines="1"
+                        android:minWidth="96dp"
+                        android:textAppearance="?textAppearanceListItem"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/distance_label"
+                        app:layout_constraintTop_toBottomOf="@id/map"
+                        app:suffix="@string/km_suffix"
+                        app:value="@={ allowance.distance }" />
+
+                    <ImageButton
+                        android:id="@+id/expand_trip"
+                        style="?actionButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:tint="?android:textColorPrimary"
+                        app:layout_constraintBottom_toBottomOf="@id/distance"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="@id/distance"
+                        app:srcCompat="@drawable/ic_expand_24dp" />
+
+                    <android.support.v7.widget.SwitchCompat
+                        android:id="@+id/round_trip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/round_trip_abbr"
+                        android:visibility="gone"
+                        app:layout_constraintBottom_toBottomOf="@id/distance"
+                        app:layout_constraintEnd_toEndOf="@id/map"
+                        app:layout_constraintTop_toTopOf="@id/distance"
+                        app:switchPadding="@dimen/spacing"
+                        tools:visibility="visible" />
+
+                </android.support.constraint.ConstraintLayout>
+
+                <android.support.constraint.ConstraintLayout
+                    android:id="@+id/dates_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing"
+                    android:layout_marginTop="@dimen/spacing"
+                    android:background="?selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:minHeight="?listPreferredItemHeightSmall">
+
+                    <ImageView
+                        android:id="@+id/dates_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/activity_margin"
+                        android:layout_marginStart="@dimen/activity_margin"
+                        android:layout_marginTop="12dp"
+                        android:tint="@android:color/darker_gray"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_calendar_24dp" />
+
+                    <TextView
+                        android:id="@+id/dates"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/activity_margin"
+                        android:layout_marginLeft="@dimen/form_spacing"
+                        android:layout_marginRight="@dimen/activity_margin"
+                        android:layout_marginStart="@dimen/form_spacing"
+                        android:textAppearance="?attr/textAppearanceListItemSmall"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/dates_icon"
+                        app:layout_constraintTop_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:text="Jeudi 10 sept. 2017" />
+
+                </android.support.constraint.ConstraintLayout>
+
+                <!--<android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/spacing"
+                    android:layout_marginTop="@dimen/spacing">
+
+                    <ImageView
+                        android:id="@+id/attachment_icon"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/activity_margin"
+                        android:layout_marginStart="@dimen/activity_margin"
+                        android:layout_marginTop="@dimen/spacing"
+                        android:tint="@android:color/darker_gray"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:srcCompat="@drawable/ic_attachment_24dp" />
+
+                    <Button
+                        android:id="@+id/add_attachment"
+                        style="?borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/activity_margin"
+                        android:layout_marginLeft="@dimen/form_spacing"
+                        android:layout_marginRight="@dimen/activity_margin"
+                        android:layout_marginStart="@dimen/form_spacing"
+                        android:text="@string/add_attachment"
+                        app:layout_constraintBottom_toTopOf="@id/comment"
+                        app:layout_constraintStart_toEndOf="@id/attachment_icon"
+                        app:layout_constraintTop_toBottomOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintVertical_chainStyle="packed" />
+
+                    <EditText
+                        android:id="@+id/comment"
+                        style="@style/Widget.EditText.Borderless"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/large_spacing"
+                        android:layout_marginRight="@dimen/large_spacing"
+                        android:hint="@string/comment"
+                        android:imeOptions="actionDone"
+                        android:inputType="text|textAutoCorrect|textCapSentences"
+                        android:text="@={ allowance.comment }"
+                        android:textAppearance="?attr/textAppearanceListItemSmall"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="@id/add_attachment"
+                        app:layout_constraintTop_toBottomOf="@id/add_attachment" />
+
+                </android.support.constraint.ConstraintLayout>-->
+
+            </LinearLayout>
+
+        </ScrollView>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/hints"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?android:windowBackground"
+            android:visibility="gone"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:listitem="@layout/allowance_hint_client_item" />
+
+    </android.support.design.widget.CoordinatorLayout>
+</layout>

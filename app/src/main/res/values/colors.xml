@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="colorPrimary">#29b6f6</color>
+    <color name="colorPrimaryDark">#2396cc</color>
+    <color name="colorAccent">#FFB300</color>
+    <color name="trip_polyline">#1565c0</color>
+
+    <color name="holiday_compensatory_time">#f57f17</color>
+    <color name="holiday_paid_vacation">#01579b</color>
+    <color name="holiday_sick_leave">#2e7d32</color>
+    <color name="holiday_work_accident">#b71c1c</color>
+    <color name="holiday_family_matters">#4527a0</color>
+    <color name="holiday_unpaid_holiday">#405763</color>
+
+</resources>

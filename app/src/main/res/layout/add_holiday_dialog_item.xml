@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import
+            alias="res"
+            type="com.cubber.tiime.utils.Resources" />
+
+        <variable
+            name="type"
+            type="String" />
+    </data>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:drawableLeft="@{ res.holidayTypeIndicator(context, type) }"
+        android:drawablePadding="@dimen/large_spacing"
+        android:gravity="center_vertical"
+        android:minHeight="?attr/listPreferredItemHeightSmall"
+        android:paddingEnd="?dialogPreferredPadding"
+        android:paddingStart="?dialogPreferredPadding"
+        android:text="@{ res.holidayTypeName(context, type) }"
+        android:textAppearance="?attr/textAppearanceListItem"
+        tools:drawableStart="@drawable/holiday_background_compensatory_time"
+        tools:text="@string/holiday_type_compensatory_time" />
+</layout>

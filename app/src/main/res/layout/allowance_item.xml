@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import
+            alias="f"
+            type="com.cubber.tiime.utils.Formats" />
+
+        <variable
+            name="allowance"
+            type="com.cubber.tiime.model.MileageAllowance" />
+    </data>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp">
+
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.gms.maps.MapView
+                android:id="@+id/map"
+                android:layout_width="0dp"
+                android:layout_height="156dp"
+                android:layout_marginBottom="@dimen/small_spacing"
+                android:background="?colorButtonNormal"
+                app:visible="@{ allowance.polyline != null }"
+                app:layout_constraintBottom_toTopOf="@+id/reason"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:liteMode="true"
+                app:mapType="normal"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/reason"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="?listPreferredItemPaddingLeft"
+                android:layout_marginStart="?listPreferredItemPaddingLeft"
+                android:layout_marginTop="@dimen/spacing"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@{ allowance.reason }"
+                android:textAppearance="?textAppearanceListItem"
+                app:layout_constraintBottom_toTopOf="@id/date"
+                app:layout_constraintEnd_toStartOf="@id/distance"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/map"
+                tools:text="Visite client" />
+
+            <TextView
+                android:id="@+id/date"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/spacing"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@{ f.fullDateFormat.format(allowance.dates.iterator().next()) }"
+                android:textAppearance="?android:textAppearanceSmall"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="@id/reason"
+                app:layout_constraintStart_toStartOf="@id/reason"
+                app:layout_constraintTop_toBottomOf="@+id/reason"
+                tools:text="12 septembre 2017" />
+
+            <TextView
+                android:id="@+id/distance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="?listPreferredItemPaddingRight"
+                android:layout_marginRight="?listPreferredItemPaddingRight"
+                android:text="@{ @string/distance_format(allowance.distance) }"
+                android:textAppearance="?textAppearanceListItem"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/reason"
+                app:layout_constraintTop_toBottomOf="@id/map"
+                tools:text="120 km" />
+
+        </android.support.constraint.ConstraintLayout>
+
+    </android.support.v7.widget.CardView>
+
+</layout>

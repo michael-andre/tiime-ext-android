@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import
+            alias="res"
+            type="com.cubber.tiime.utils.Resources" />
+
+        <variable
+            name="type"
+            type="String" />
+    </data>
+
+    <TextView
+        style="?attr/spinnerDropDownItemStyle"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/dropdownListPreferredItemHeight"
+        android:drawableLeft="@{ res.vehicleTypeIcon(context, type) }"
+        android:drawablePadding="@dimen/spacing"
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:text="@{ res.vehicleTypeName(context, type) }"
+        tools:drawableStart="@drawable/ic_vehicle_type_car"
+        tools:ignore="RtlHardcoded"
+        tools:text="@string/vehicle_type_car" />
+
+</layout>

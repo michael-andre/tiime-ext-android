@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@android:color/white">
+    <item>
+        <shape
+            android:innerRadiusRatio="4"
+            android:thicknessRatio="6"
+            android:shape="ring"
+            android:useLevel="false">
+            <solid android:color="@color/holiday_paid_vacation" />
+            <size
+                android:width="@dimen/holiday_icon_size"
+                android:height="@dimen/holiday_icon_size" />
+        </shape>
+    </item>
+</ripple>

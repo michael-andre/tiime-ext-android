@@ -1,0 +1,328 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.cubber.tiime.model.Wage" />
+
+        <import
+            alias="f"
+            type="com.cubber.tiime.utils.Formats" />
+
+        <variable
+            name="wage"
+            type="com.cubber.tiime.model.Wage" />
+
+        <variable
+            name="holidaysSummary"
+            type="java.util.Map&lt;String,Double>" />
+
+        <variable
+            name="displayYear"
+            type="boolean" />
+
+    </data>
+
+    <android.support.v7.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:animateLayoutChanges="true">
+
+        <LinearLayout
+            android:id="@+id/layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:title="@{ f.monthFormat().format(wage.period) }"
+                app:titleTextAppearance="@style/TextAppearance.AppCompat.Medium"
+                tools:title="Octobre 2017">
+
+                <Button
+                    style="?buttonBarButtonStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:drawableLeft="@drawable/ic_validate_24dp"
+                    android:drawablePadding="@dimen/small_spacing"
+                    android:drawableStart="@drawable/ic_validate_24dp"
+                    android:text="@string/validate"
+                    app:visible="@{ !displayYear &amp;&amp; wage.editable &amp;&amp; !wage.validated }" />
+
+            </android.support.v7.widget.Toolbar>
+
+            <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+                android:id="@+id/calendar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/small_spacing"
+                android:layout_marginLeft="@dimen/small_spacing"
+                android:layout_marginRight="@dimen/small_spacing"
+                app:mcv_allowClickDaysOutsideCurrentMonth="false"
+                app:mcv_calendarMode="month"
+                app:mcv_dateTextAppearance="?textAppearanceListItemSmall"
+                app:mcv_weekDayTextAppearance="@style/TextAppearance.AppCompat.Caption" />
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/holidays_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingBottom="@dimen/spacing"
+                android:paddingTop="@dimen/spacing"
+                app:visible="@{ !displayYear }">
+
+                <ImageView
+                    android:id="@+id/holidays_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/large_spacing"
+                    android:layout_marginStart="@dimen/large_spacing"
+                    android:layout_marginTop="2dp"
+                    android:tint="@android:color/darker_gray"
+                    app:layout_constraintEnd_toStartOf="@id/holidays_table"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_social_20dp" />
+
+                <TableLayout
+                    android:id="@+id/holidays_table"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/large_spacing"
+                    android:layout_marginRight="@dimen/large_spacing"
+                    android:stretchColumns="*"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/holidays_icon">
+
+                    <TableRow app:visible="@{ holidaysSummary.isEmpty() }">
+
+                        <TextView
+                            android:layout_span="2"
+                            android:text="@string/no_holiday"
+                            android:textAppearance="?attr/textAppearanceListItemSmall" />
+
+                    </TableRow>
+
+                    <TableRow app:visible="@{ holidaysSummary.containsKey(`paidVacation`) }">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="2"
+                            android:text="@string/holiday_type_paid_vacation"
+                            android:textAppearance="?attr/textAppearanceListItemSmall" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@{ @string/holidays_count_format(holidaysSummary[`paidVacation`]) }"
+                            android:textAppearance="?textAppearanceListItemSmall"
+                            tools:text="1" />
+                    </TableRow>
+
+                    <TableRow app:visible="@{ holidaysSummary.containsKey(`compensatoryTime`) }">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="2"
+                            android:text="@string/holiday_type_compensatory_time"
+                            android:textAppearance="?textAppearanceListItemSmall" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@{ @string/holidays_count_format(holidaysSummary[`compensatoryTime`]) }"
+                            android:textAppearance="?textAppearanceListItemSmall"
+                            tools:text="1" />
+                    </TableRow>
+
+                    <TableRow app:visible="@{ holidaysSummary.containsKey(`sickLeave`) }">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="2"
+                            android:text="@string/holiday_type_sick_leave"
+                            android:textAppearance="?textAppearanceListItemSmall" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@{ @string/holidays_count_format(holidaysSummary[`sickLeave`]) }"
+                            android:textAppearance="?textAppearanceListItemSmall"
+                            tools:text="1" />
+                    </TableRow>
+
+                    <TableRow app:visible="@{ holidaysSummary.containsKey(`workAccident`) }">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="2"
+                            android:text="@string/holiday_type_work_accident"
+                            android:textAppearance="?textAppearanceListItemSmall" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@{ @string/holidays_count_format(holidaysSummary[`workAccident`]) }"
+                            android:textAppearance="?textAppearanceListItemSmall"
+                            tools:text="1" />
+                    </TableRow>
+
+                    <TableRow app:visible="@{ holidaysSummary.containsKey(`familyMatters`) }">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="2"
+                            android:text="@string/holiday_type_family_matters"
+                            android:textAppearance="?textAppearanceListItemSmall" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@{ @string/holidays_count_format(holidaysSummary[`familyMatters`]) }"
+                            android:textAppearance="?textAppearanceListItemSmall"
+                            tools:text="1" />
+                    </TableRow>
+
+                    <TableRow app:visible="@{ holidaysSummary.containsKey(`unpaidHoliday`) }">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="2"
+                            android:text="@string/holiday_type_unpaid_holidays"
+                            android:textAppearance="?textAppearanceListItemSmall" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@{ @string/holidays_count_format(holidaysSummary[`unpaidHoliday`]) }"
+                            android:textAppearance="?textAppearanceListItemSmall"
+                            tools:text="1" />
+                    </TableRow>
+
+                </TableLayout>
+
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingBottom="@dimen/spacing"
+                android:paddingTop="@dimen/spacing"
+                app:visible="@{ !displayYear &amp;&amp; (wage.increase != null || wage.bonus != null) }">
+
+                <ImageView
+                    android:id="@+id/increase_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/large_spacing"
+                    android:layout_marginTop="2dp"
+                    android:tint="@android:color/darker_gray"
+                    app:layout_constraintEnd_toStartOf="@id/increase_summary"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_increase_20dp" />
+
+                <TableLayout
+                    android:id="@+id/increase_summary"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/large_spacing"
+                    android:layout_marginRight="@dimen/large_spacing"
+                    android:stretchColumns="*"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/increase_icon">
+
+                    <TableRow app:visible="@{ wage.increase != null }">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="2"
+                            android:text="@{ Wage.SALARY_TYPE_NET.equals(wage.increaseType) ? @string/net_increase : @string/gross_increase }"
+                            android:textAppearance="?attr/textAppearanceListItemSmall"
+                            tools:text="@string/net_increase" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@{ f.euroFormat().format(wage.increase) }"
+                            android:textAppearance="?textAppearanceListItemSmall"
+                            tools:text="100 €" />
+                    </TableRow>
+
+                    <TableRow app:visible="@{ wage.bonus != null }">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="2"
+                            android:text="@{ Wage.SALARY_TYPE_NET.equals(wage.bonusType) ? @string/net_bonus : @string/gross_bonus }"
+                            android:textAppearance="?attr/textAppearanceListItemSmall"
+                            tools:text="@string/gross_bonus" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:text="@{ f.euroFormat().format(wage.bonus) }"
+                            android:textAppearance="?textAppearanceListItemSmall"
+                            tools:text="250 €" />
+
+                    </TableRow>
+
+                </TableLayout>
+
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingBottom="@dimen/spacing"
+                android:paddingTop="@dimen/spacing"
+                app:visible="@{ !displayYear &amp;&amp; wage.comment != null }">
+
+                <ImageView
+                    android:id="@+id/comment_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/large_spacing"
+                    android:layout_marginTop="2dp"
+                    android:tint="@android:color/darker_gray"
+                    app:layout_constraintEnd_toStartOf="@id/comment"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_comment_20dp" />
+
+                <TextView
+                    android:id="@+id/comment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/large_spacing"
+                    android:layout_marginRight="@dimen/large_spacing"
+                    android:text="@{ wage.comment }"
+                    android:textAppearance="?android:textAppearanceSmall"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/comment_icon"
+                    tools:text="Commentaire" />
+
+            </android.support.constraint.ConstraintLayout>
+
+        </LinearLayout>
+
+    </android.support.v7.widget.CardView>
+
+</layout>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group
+        android:id="@+id/sections"
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/mileage_allowances"
+            android:icon="@drawable/ic_car_24dp"
+            android:title="@string/mileage_allowances" />
+
+        <item
+            android:id="@+id/social"
+            android:icon="@drawable/ic_social_24dp"
+            android:title="@string/wages"/>
+
+    </group>
+
+</menu>
