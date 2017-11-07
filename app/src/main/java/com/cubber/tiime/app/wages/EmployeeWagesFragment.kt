@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.transition.TransitionManager
 import android.support.v4.app.Fragment
+import android.support.v4.util.LongSparseArray
 import android.support.v7.widget.GridLayoutManager
 import android.view.LayoutInflater
 import android.view.View
@@ -20,20 +21,17 @@ import com.cubber.tiime.R
 import com.cubber.tiime.data.WagesSource
 import com.cubber.tiime.databinding.EmployeeWagesFragmentBinding
 import com.cubber.tiime.model.Wage
-import com.prolificinteractive.materialcalendarview.CalendarDay
-import com.prolificinteractive.materialcalendarview.MaterialCalendarView
-import com.prolificinteractive.materialcalendarview.OnDateSelectedListener
 import java.util.*
 
 /**
  * Created by mike on 26/10/17.
  */
 
-class EmployeeWagesFragment : Fragment(), OnDateSelectedListener {
+class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
 
-    private var layoutManager: GridLayoutManager? = null
     private lateinit var model: VM
     private lateinit var binding: EmployeeWagesFragmentBinding
+    private lateinit var layoutManager: GridLayoutManager
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
@@ -45,9 +43,9 @@ class EmployeeWagesFragment : Fragment(), OnDateSelectedListener {
         binding.list.layoutManager = layoutManager
         binding.list.adapter = adapter
         val parent = parentFragment as WagesFragment
-        parent.showYearViewData.observe(this, Observer { showYearView ->
-            layoutManager!!.spanCount = if (showYearView == true) 2 else 1
-            adapter.setShowYearView(showYearView == true)
+        parent.viewYearData.observe(this, Observer { viewYear ->
+            layoutManager.spanCount = if (viewYear == true) 2 else 1
+            adapter.setViewYear(viewYear == true)
             TransitionManager.beginDelayedTransition(binding.root.parent as ViewGroup)
         })
 
@@ -67,21 +65,27 @@ class EmployeeWagesFragment : Fragment(), OnDateSelectedListener {
         return binding.root
     }
 
-    override fun onDateSelected(view: MaterialCalendarView, date: CalendarDay, selected: Boolean) {
-        view.setDateSelected(date, false)
-        val startDate = date.date
-        val targetWage = model.wages?.value?.firstEditable(startDate)
+    override fun onDateSelected(date: Date) {
+        val targetWage = model.wages?.value?.firstEditable(date)
         if (targetWage != null) {
-            AddHolidayFragment.newInstance(targetWage.id, startDate, 2).show(childFragmentManager, "add_holiday")
+            WageHolidayFragment.newInstance(targetWage.id, date, 2).show(childFragmentManager, "add_holiday")
         } else {
-            Snackbar.make(getView()!!, R.string.invalid_holiday_date, Snackbar.LENGTH_LONG).show()
+            Snackbar.make(binding.root, R.string.invalid_holiday_date, Snackbar.LENGTH_LONG).show()
         }
+    }
+
+    override fun onEditComment(item: Wage) {
+        WageCommentFragment.newInstance(item.id).show(childFragmentManager, "edit_comment")
+    }
+
+    override fun onEditIncreaseBonus(item: Wage) {
+        WageIncreaseBonusFragment.newInstance(item.id).show(childFragmentManager, "edit_increase_bonus")
     }
 
     class VM(application: Application) : AndroidViewModel(application) {
 
         var wages: LiveData<PagedList<Wage>>? = null
-        var expandedIds = mutableSetOf<Long>()
+        var expandedIds = LongSparseArray<Boolean>()
         var currentSource: WagesSource? = null
 
         fun init(employeeId: Long) {

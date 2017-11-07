@@ -71,6 +71,7 @@
 
                 <Spinner
                     android:id="@+id/type"
+                    style="@style/Widget.AppCompat.Spinner.Underlined"
                     items="@{ types }"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -98,6 +99,7 @@
 
                 <Spinner
                     android:id="@+id/fiscal_power"
+                    style="@style/Widget.AppCompat.Spinner.Underlined"
                     items="@{ powers }"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

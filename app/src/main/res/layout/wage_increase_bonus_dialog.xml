@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import
+            alias="f"
+            type="com.cubber.tiime.utils.Formats" />
+
+        <variable
+            name="wage"
+            type="com.cubber.tiime.model.Wage" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:title="@{ f.monthFormat().format(wage.period) }">
+
+        </android.support.v7.widget.Toolbar>
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/large_spacing"
+            android:stretchColumns="0,1">
+
+            <TableRow>
+
+                <TextView android:text="@string/gross_salary_label" />
+
+                <TextView
+                    android:layout_span="2"
+                    android:text="@{ f.euroSafeFormat().format(wage.grossSalary) }"
+                    android:textAppearance="?android:textAppearanceMedium"
+                    tools:text="2 000 €" />
+
+            </TableRow>
+
+            <TableRow android:layout_marginTop="@dimen/spacing">
+
+                <TextView android:text="@string/increase_label" />
+
+                <com.wapplix.widget.NumberEditText
+                    android:id="@+id/increase"
+                    android:enabled="@{ wage != null }"
+                    android:inputType="number"
+                    app:value="@{ wage.increase }" />
+
+                <Spinner
+                    android:id="@+id/increase_type"
+                    style="@style/Base.Widget.AppCompat.Spinner.Underlined"
+                    android:enabled="@{ wage != null }"
+                    tools:listitem="@android:layout/simple_spinner_item" />
+
+            </TableRow>
+
+            <TableRow android:layout_marginTop="@dimen/spacing">
+
+                <TextView android:text="@string/bonus_label" />
+
+                <com.wapplix.widget.NumberEditText
+                    android:id="@+id/bonus"
+                    android:enabled="@{ wage != null }"
+                    android:inputType="number"
+                    app:value="@{ wage.bonus }" />
+
+                <Spinner
+                    android:id="@+id/bonus_type"
+                    style="@style/Base.Widget.AppCompat.Spinner.Underlined"
+                    android:enabled="@{ wage != null }"
+                    tools:listitem="@android:layout/simple_spinner_item" />
+
+            </TableRow>
+
+
+        </TableLayout>
+
+    </LinearLayout>
+
+</layout>

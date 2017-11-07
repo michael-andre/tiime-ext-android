@@ -215,11 +215,12 @@
             </android.support.constraint.ConstraintLayout>
 
             <android.support.constraint.ConstraintLayout
+                android:id="@+id/increase_bonus_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
+                android:clickable="@{ wage.editable }"
+                android:focusable="@{ wage.editable }"
                 android:paddingBottom="@dimen/spacing"
                 android:paddingTop="@dimen/spacing"
                 app:visible="@{ !displayYear &amp;&amp; (wage.increase != null || wage.bonus != null) }">
@@ -258,7 +259,7 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:text="@{ f.euroFormat().format(wage.increase) }"
+                            android:text="@{ f.euroSafeFormat().format(wage.increase) }"
                             android:textAppearance="?textAppearanceListItemSmall"
                             tools:text="100 €" />
                     </TableRow>
@@ -275,7 +276,7 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="1"
-                            android:text="@{ f.euroFormat().format(wage.bonus) }"
+                            android:text="@{ f.euroSafeFormat().format(wage.bonus) }"
                             android:textAppearance="?textAppearanceListItemSmall"
                             tools:text="250 €" />
 
@@ -286,11 +287,12 @@
             </android.support.constraint.ConstraintLayout>
 
             <android.support.constraint.ConstraintLayout
+                android:id="@+id/comment_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?selectableItemBackground"
-                android:clickable="true"
-                android:focusable="true"
+                android:clickable="@{ wage.editable }"
+                android:focusable="@{ wage.editable }"
                 android:paddingBottom="@dimen/spacing"
                 android:paddingTop="@dimen/spacing"
                 app:visible="@{ !displayYear &amp;&amp; wage.comment != null }">

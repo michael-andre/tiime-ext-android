@@ -39,13 +39,19 @@ object Wages {
 }
 
 fun Iterable<Wage>.firstEditable(holidayDate: Date): Wage? {
-    return this.firstOrNull {
-        if (!it.editable) return@firstOrNull false
-        if (!it.period!!.before(holidayDate)) return@firstOrNull true
-        val cal = Calendar.getInstance()
-        cal.time = it.period
-        cal.add(Calendar.MONTH, -1)
-        if (!it.period!!.before(holidayDate)) return@firstOrNull true
-        false
+    val indexed = this.associateBy { it.period }
+    val cal = Calendar.getInstance()
+    cal.time = holidayDate
+    cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH))
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    indexed[cal.time]?.let {
+        if (it.editable) return it
     }
+    cal.add(Calendar.MONTH, 1)
+    indexed[cal.time]?.let {
+        if (it.editable) return it
+    }
+    return null
 }

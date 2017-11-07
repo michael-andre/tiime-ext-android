@@ -5,6 +5,7 @@ import android.content.Context
 import android.databinding.OnRebindCallback
 import android.graphics.drawable.Drawable
 import android.support.transition.TransitionManager
+import android.support.v4.util.LongSparseArray
 import android.support.v7.widget.RecyclerView
 import android.text.format.DateUtils
 import android.view.LayoutInflater
@@ -27,11 +28,17 @@ import java.util.*
  */
 class WagesAdapter(
         context: Context,
-        private val expandedIds: MutableSet<Long>,
-        private val dateSelectedListener: OnDateSelectedListener
+        private val expandedIds: LongSparseArray<Boolean>,
+        private val listener: Listener
 ) : BindingPagedListAdapter<Wage, WageItemBinding>({ id }) {
 
-    private var showYearView: Boolean = false
+    interface Listener {
+        fun onDateSelected(date: Date)
+        fun onEditComment(item: Wage)
+        fun onEditIncreaseBonus(item: Wage)
+    }
+
+    private var viewYear: Boolean = false
 
     private val holidayDecorators = HashMap<String, HolidayDecorator>()
     private val commonDayDecorator = object : DayViewDecorator {
@@ -48,12 +55,16 @@ class WagesAdapter(
 
     }
     private val weekDayFormatter = WeekDayFormatter { dayOfWeek ->
-        if (showYearView)
+        if (viewYear)
             DateUtils.getDayOfWeekString(dayOfWeek, DateUtils.LENGTH_SHORTEST)
         else
             WeekDayFormatter.DEFAULT.format(dayOfWeek)
     }
-    private val dayFormatter = DayFormatter { day -> if (showYearView) "•" else DayFormatter.DEFAULT.format(day) }
+    private val dayFormatter = DayFormatter { day -> if (viewYear) "•" else DayFormatter.DEFAULT.format(day) }
+    private val dateListener = OnDateSelectedListener { view, d, _ ->
+        view.setDateSelected(d, false)
+        listener.onDateSelected(d.date)
+    }
 
     init {
         setHasStableIds(true)
@@ -84,8 +95,8 @@ class WagesAdapter(
         }
     }
 
-    fun setShowYearView(displayYear: Boolean) {
-        showYearView = displayYear
+    fun setViewYear(displayYear: Boolean) {
+        viewYear = displayYear
         notifyDataSetChanged()
     }
 
@@ -97,7 +108,7 @@ class WagesAdapter(
         binding.calendar.selectionMode = MaterialCalendarView.SELECTION_MODE_SINGLE
         binding.calendar.addDecorator(commonDayDecorator)
         binding.calendar.addDecorators(holidayDecorators.values)
-        binding.calendar.setOnDateChangedListener(dateSelectedListener)
+        binding.calendar.setOnDateChangedListener(dateListener)
         binding.calendar.setWeekDayFormatter(weekDayFormatter)
         binding.calendar.setDayFormatter(dayFormatter)
         binding.toolbar.inflateMenu(R.menu.wage_context)
@@ -108,7 +119,7 @@ class WagesAdapter(
 
             override fun onBound(binding: WageItemBinding?) {
                 with(binding!!.wage!!) {
-                    val showMenu = !showYearView && editable
+                    val showMenu = !viewYear && editable
                     increaseBonusItem.isVisible = showMenu
                     commentItem.isVisible = showMenu
                 }
@@ -120,9 +131,9 @@ class WagesAdapter(
 
     override fun onBindView(binding: WageItemBinding, item: Wage) {
         binding.wage = item
-        binding.displayYear = showYearView
+        binding.displayYear = viewYear
         binding.holidaysSummary = Wages.getHolidaysSummary(item)
-        binding.calendar.visibility = if (showYearView || expandedIds!!.contains(item.id)) View.VISIBLE else View.GONE
+        binding.calendar.visibility = if (viewYear || shouldExpand(item)) View.VISIBLE else View.GONE
         with(binding.calendar.state().edit()) {
             val cal = Calendar.getInstance()
             cal.time = item.period
@@ -134,13 +145,38 @@ class WagesAdapter(
         }
         binding.holidaysRow.setOnClickListener {
             TransitionManager.beginDelayedTransition(binding.root.parent as ViewGroup)
-            binding.calendar.visibility = if (expandedIds.remove(item.id)) {
+            binding.calendar.visibility = if (shouldExpand(item)) {
+                expandedIds.put(item.id, false)
                 View.GONE
             } else {
-                expandedIds.add(item.id)
+                expandedIds.put(item.id, true)
                 View.VISIBLE
             }
         }
+        binding.toolbar.setOnMenuItemClickListener {
+            when (it.itemId) {
+                R.id.comment -> {
+                    listener.onEditComment(item)
+                    true
+                }
+                R.id.increase_bonus -> {
+                    listener.onEditIncreaseBonus(item)
+                    true
+                }
+                else -> false
+            }
+        }
+        binding.commentRow.setOnClickListener { listener.onEditComment(item) }
+        binding.increaseBonusRow.setOnClickListener { listener.onEditIncreaseBonus(item) }
+    }
+
+    private fun shouldExpand(item: Wage): Boolean {
+        var expanded = expandedIds.get(item.id)
+        if (expanded == null) {
+            expanded = item.editable
+            expandedIds.put(item.id, expanded)
+        }
+        return expanded
     }
 
     override fun getItemId(position: Int): Long {

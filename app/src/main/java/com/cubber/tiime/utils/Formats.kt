@@ -31,12 +31,16 @@ fun monthFormat(): Format {
     return dateFormat("MMMM yyyy").capitalized()
 }
 
-fun euroFormat(): Format {
+fun euroSafeFormat(): Format {
+    return euroFormat().nullSafe()
+}
+
+fun euroFormat(): NumberFormat {
     return NumberFormat.getCurrencyInstance().apply {
         currency = Currency.getInstance("EUR")
         maximumFractionDigits = 2
         minimumFractionDigits = 0
-    }.nullSafe()
+    }
 }
 
 fun Format.nullSafe(): Format {

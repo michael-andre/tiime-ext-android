@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import
+            alias="f"
+            type="com.cubber.tiime.utils.Formats" />
+
+        <variable
+            name="wage"
+            type="com.cubber.tiime.model.Wage" />
+    </data>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:title="@{ f.monthFormat().format(wage.period) }">
+
+        </android.support.v7.widget.Toolbar>
+
+        <EditText
+            android:id="@+id/comment"
+            style="@style/Widget.EditText.Borderless"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/large_spacing"
+            android:enabled="@{ wage != null }"
+            android:hint="@string/comment"
+            android:inputType="text|textCapSentences|textMultiLine|textLongMessage"
+            android:maxLines="5"
+            android:text="@{ wage.comment }" />
+
+    </LinearLayout>
+
+</layout>

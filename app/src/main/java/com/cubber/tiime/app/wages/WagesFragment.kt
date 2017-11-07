@@ -20,10 +20,10 @@ import com.cubber.tiime.model.Employee
 
 class WagesFragment : Fragment() {
 
-    private var mModel: VM? = null
+    private lateinit var model: VM
 
-    val showYearViewData: LiveData<Boolean>
-        get() = mModel!!.viewYear
+    val viewYearData: LiveData<Boolean>
+        get() = model.viewYear
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,8 +40,8 @@ class WagesFragment : Fragment() {
         b.pager.adapter = adapter
         b.tabs.setupWithViewPager(b.pager)
 
-        mModel = ViewModelProviders.of(this).get(VM::class.java)
-        mModel!!.employees.observe(this, Observer { adapter.setEmployees(it) })
+        model = ViewModelProviders.of(this).get(VM::class.java)
+        model.employees.observe(this, Observer { adapter.setEmployees(it) })
 
         return b.root
     }
@@ -50,7 +50,7 @@ class WagesFragment : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
         inflater!!.inflate(R.menu.wages, menu)
         val yearItem = menu!!.findItem(R.id.view_year)
-        mModel!!.viewYear.observe(this, Observer { viewYear ->
+        model.viewYear.observe(this, Observer { viewYear ->
             yearItem.isChecked = viewYear == true
             yearItem.icon = ContextCompat.getDrawable(context!!, if (viewYear == true) R.drawable.ic_view_cards else R.drawable.ic_view_year)
         })
@@ -59,7 +59,7 @@ class WagesFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item!!.itemId) {
             R.id.view_year -> {
-                mModel!!.viewYear.postValue(!item.isChecked)
+                model.viewYear.postValue(!item.isChecked)
                 return true
             }
         }

@@ -39,7 +39,7 @@ class DataRepository {
                                 Holiday(id = 1101, startDate = dateFormat.parse("2017-10-25"), type = Holiday.TYPE_FAMILY_MATTERS, duration = 1),
                                 Holiday(id = 1102, startDate = dateFormat.parse("2017-10-14"), type = Holiday.TYPE_SICK_LEAVE, duration = 4),
                                 Holiday(id = 1103, startDate = dateFormat.parse("2017-10-20"), type = Holiday.TYPE_UNPAID_HOLIDAY, duration = 6)
-                        ), editable = true, increase = BigDecimal("300"), increaseType = Wage.SALARY_TYPE_GROSS),
+                        ), editable = true, increase = BigDecimal("300"), increaseType = Wage.SALARY_TYPE_GROSS, grossSalary = BigDecimal("3000")),
                         Wage(id = 109, period = dateFormat.parse("2017-09-01"), holidays = listOf(
                                 Holiday(id = 1091, startDate = dateFormat.parse("2017-09-12"), type = Holiday.TYPE_FAMILY_MATTERS, duration = 1),
                                 Holiday(id = 1092, startDate = dateFormat.parse("2017-09-09"), type = Holiday.TYPE_COMPENSATORY_TIME, duration = 6),
@@ -129,6 +129,14 @@ class DataRepository {
             (from == null || !w.period!!.before(from))
                     && (to == null || !w.period!!.after(to))
         } ?: emptyList()
+    }
+
+    fun wage(id: Long): LiveData<Wage?> {
+        return object : LiveData<Wage?>() {
+            init {
+                value = wages.values.flatten().firstOrNull { it.id == id }
+            }
+        }
     }
 
     fun getMileageAllowances(start: Int = 0, count: Int?): List<MileageAllowance> {

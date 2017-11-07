@@ -59,4 +59,9 @@
     <string name="layout_list">List</string>
     <string name="half_day">Demi-journée</string>
     <string name="invalid_holiday_date">Il n’est pas possible d’ajouter un congé à cette date.</string>
+    <string name="gross_salary_label">Salaire brut&#160;:</string>
+    <string name="increase_label">Augmentation&#160;:</string>
+    <string name="bonus_label">Prime&#160;:</string>
+    <string name="net">Net</string>
+    <string name="gross">Brut</string>
 </resources>

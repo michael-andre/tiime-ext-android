@@ -5,22 +5,20 @@ import android.support.design.widget.BottomSheetDialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.cubber.tiime.databinding.AddHolidayDialogBinding
-import com.cubber.tiime.databinding.AddHolidayDialogItemBinding
+import com.cubber.tiime.databinding.WageHolidayDialogBinding
+import com.cubber.tiime.databinding.WageHolidayDialogItemBinding
 import com.cubber.tiime.model.Holiday
 import com.wapplix.recycler.BindingListAdapter
-import java.io.Serializable
 import java.util.*
-import kotlin.collections.ArrayList
 
 /**
  * Created by mike on 30/10/17.
  */
 
-class AddHolidayFragment : BottomSheetDialogFragment() {
+class WageHolidayFragment : BottomSheetDialogFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val binding = AddHolidayDialogBinding.inflate(inflater, container, false)
+        val binding = WageHolidayDialogBinding.inflate(inflater, container, false)
 
         binding.type.adapter = Adapter()
 
@@ -36,16 +34,16 @@ class AddHolidayFragment : BottomSheetDialogFragment() {
         dismiss()
     }
 
-    private inner class Adapter : BindingListAdapter<String, AddHolidayDialogItemBinding>() {
+    private inner class Adapter : BindingListAdapter<String, WageHolidayDialogItemBinding>() {
         init {
             items = Arrays.asList(*Holiday.TYPES)
         }
 
-        override fun onCreateViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): AddHolidayDialogItemBinding {
-            return AddHolidayDialogItemBinding.inflate(inflater, parent, false)
+        override fun onCreateViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): WageHolidayDialogItemBinding {
+            return WageHolidayDialogItemBinding.inflate(inflater, parent, false)
         }
 
-        override fun onBindView(binding: AddHolidayDialogItemBinding, item: String) {
+        override fun onBindView(binding: WageHolidayDialogItemBinding, item: String) {
             binding.type = item
             binding.root.setOnClickListener { addHoliday(item) }
         }
@@ -58,8 +56,8 @@ class AddHolidayFragment : BottomSheetDialogFragment() {
         private const val ARG_START_DATE = "start_date"
         private const val ARG_DURATION = "duration"
 
-        fun newInstance(wageId: Long, startDate: Date, duration: Int): AddHolidayFragment {
-            return AddHolidayFragment().apply {
+        fun newInstance(wageId: Long, startDate: Date, duration: Int): WageHolidayFragment {
+            return WageHolidayFragment().apply {
                 arguments = Bundle().apply {
                     putLong(ARG_WAGE_ID, wageId)
                     putSerializable(ARG_START_DATE, startDate)
