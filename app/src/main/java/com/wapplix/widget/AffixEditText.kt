@@ -19,8 +19,8 @@ open class AffixEditText @JvmOverloads constructor(
     private var leftText: CharSequence? = null
     private var rightText: CharSequence? = null
 
-    private var leftTextWidth = 0f
-    private var rightTextWidth = 0f
+    private var leftTextWidth = 0
+    private var rightTextWidth = 0
     private val suffixPrefixPaint = Paint()
 
     private val isRtl: Boolean
@@ -29,22 +29,14 @@ open class AffixEditText @JvmOverloads constructor(
     var prefix: CharSequence?
         get() = if (isRtl) rightText else leftText
         set(value) {
-            if (isRtl) {
-                rightText = value
-            } else {
-                leftText = value
-            }
+            if (isRtl) { rightText = value } else { leftText = value }
             requestLayout()
         }
 
     var suffix: CharSequence?
         get() = if (isRtl) leftText else rightText
         set(value) {
-            if (isRtl) {
-                leftText = suffix
-            } else {
-                rightText = suffix
-            }
+            if (isRtl) { leftText = value } else { rightText = value }
             requestLayout()
         }
 
@@ -62,31 +54,31 @@ open class AffixEditText @JvmOverloads constructor(
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        leftTextWidth = if (leftText != null) paint.measureText(leftText!!.toString()) else 0f
-        rightTextWidth = if (rightText != null) paint.measureText(rightText!!.toString()) else 0f
+        leftTextWidth = if (leftText != null) paint.measureText(leftText.toString()).toInt() else 0
+        rightTextWidth = if (rightText != null) paint.measureText(rightText.toString()).toInt() else 0
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    override fun getCompoundPaddingLeft(): Int {
+        return super.getCompoundPaddingLeft() + leftTextWidth
+    }
+
+    override fun getCompoundPaddingRight(): Int {
+        return super.getCompoundPaddingRight() + rightTextWidth
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.translate(scrollX.toFloat(), 0f)
         suffixPrefixPaint.set(paint)
-        if (leftText != null) {
+        leftText?.let {
             suffixPrefixPaint.textAlign = Paint.Align.LEFT
-            canvas.drawText(leftText!!, 0, leftText!!.length, super.getCompoundPaddingLeft().toFloat(), baseline.toFloat(), suffixPrefixPaint)
+            canvas.drawText(it, 0, it.length, super.getCompoundPaddingLeft().toFloat(), baseline.toFloat(), suffixPrefixPaint)
         }
-        if (rightText != null) {
+        rightText?.let {
             suffixPrefixPaint.textAlign = Paint.Align.RIGHT
-            canvas.drawText(rightText!!, 0, rightText!!.length, (width - super.getCompoundPaddingRight()).toFloat(), baseline.toFloat(), suffixPrefixPaint)
+            canvas.drawText(it, 0, it.length, (width - super.getCompoundPaddingRight()).toFloat(), baseline.toFloat(), suffixPrefixPaint)
         }
-    }
-
-    override fun getCompoundPaddingLeft(): Int {
-        return super.getCompoundPaddingLeft() + leftTextWidth.toInt()
-    }
-
-    override fun getCompoundPaddingRight(): Int {
-        return super.getCompoundPaddingRight() + rightTextWidth.toInt()
     }
 
 }

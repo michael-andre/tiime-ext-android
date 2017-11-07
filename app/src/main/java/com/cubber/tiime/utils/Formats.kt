@@ -28,41 +28,41 @@ fun dateFormat(pattern: String): DateFormat {
 }
 
 fun monthFormat(): Format {
-    return capitalize(dateFormat("MMMM yyyy"))
+    return dateFormat("MMMM yyyy").capitalized()
 }
 
 fun euroFormat(): Format {
-    val format = NumberFormat.getCurrencyInstance()
-    format.currency = Currency.getInstance("EUR")
-    format.maximumFractionDigits = 2
-    format.minimumFractionDigits = 0
-    return nullSafe(format)
+    return NumberFormat.getCurrencyInstance().apply {
+        currency = Currency.getInstance("EUR")
+        maximumFractionDigits = 2
+        minimumFractionDigits = 0
+    }.nullSafe()
 }
 
-private fun nullSafe(format: Format): Format {
+fun Format.nullSafe(): Format {
     return object : Format() {
 
         override fun format(o: Any?, stringBuffer: StringBuffer, fieldPosition: FieldPosition): StringBuffer {
-            return if (o != null) format.format(o, stringBuffer, fieldPosition) else stringBuffer
+            return if (o != null) this@nullSafe.format(o, stringBuffer, fieldPosition) else stringBuffer
         }
 
         override fun parseObject(s: String, parsePosition: ParsePosition): Any {
-            return format.parseObject(s, parsePosition)
+            return this@nullSafe.parseObject(s, parsePosition)
         }
 
     }
 }
 
-fun capitalize(format: Format): Format {
+fun Format.capitalized(): Format {
     return object : Format() {
 
         override fun format(o: Any, stringBuffer: StringBuffer, fieldPosition: FieldPosition): StringBuffer {
-            val sb = format.format(o, stringBuffer, fieldPosition)
+            val sb = this@capitalized.format(o, stringBuffer, fieldPosition)
             return sb.replace(0, 1, sb[0].toString().toUpperCase())
         }
 
         override fun parseObject(s: String, parsePosition: ParsePosition): Any {
-            return format.parseObject(s, parsePosition)
+            return this@capitalized.parseObject(s, parsePosition)
         }
 
     }

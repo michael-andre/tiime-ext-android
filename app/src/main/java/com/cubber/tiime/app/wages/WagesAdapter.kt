@@ -27,11 +27,11 @@ import java.util.*
  */
 class WagesAdapter(
         context: Context,
+        private val expandedIds: MutableSet<Long>,
         private val dateSelectedListener: OnDateSelectedListener
 ) : BindingPagedListAdapter<Wage, WageItemBinding>({ id }) {
 
     private var showYearView: Boolean = false
-    private var expandedIds: MutableSet<Long>? = null
 
     private val holidayDecorators = HashMap<String, HolidayDecorator>()
     private val commonDayDecorator = object : DayViewDecorator {
@@ -82,13 +82,6 @@ class WagesAdapter(
                 }
             }
         }
-        // Expand editable months
-        if (expandedIds == null) {
-            expandedIds = pagedList.asSequence()
-                    .filter { it.editable }
-                    .map { it.id }
-                    .toMutableSet()
-        }
     }
 
     fun setShowYearView(displayYear: Boolean) {
@@ -105,10 +98,9 @@ class WagesAdapter(
         binding.calendar.addDecorator(commonDayDecorator)
         binding.calendar.addDecorators(holidayDecorators.values)
         binding.calendar.setOnDateChangedListener(dateSelectedListener)
-        binding.toolbar.inflateMenu(R.menu.wage_context)
         binding.calendar.setWeekDayFormatter(weekDayFormatter)
         binding.calendar.setDayFormatter(dayFormatter)
-        binding.calendar.visibility = View.GONE
+        binding.toolbar.inflateMenu(R.menu.wage_context)
         binding.addOnRebindCallback(object : OnRebindCallback<WageItemBinding>() {
 
             private val increaseBonusItem = binding.toolbar.menu.findItem(R.id.increase_bonus)
@@ -142,29 +134,26 @@ class WagesAdapter(
         }
         binding.holidaysRow.setOnClickListener {
             TransitionManager.beginDelayedTransition(binding.root.parent as ViewGroup)
-            if (expandedIds!!.remove(item.id)) {
-                binding.calendar.visibility = View.GONE
+            binding.calendar.visibility = if (expandedIds.remove(item.id)) {
+                View.GONE
             } else {
-                expandedIds!!.add(item.id)
-                binding.calendar.visibility = View.VISIBLE
+                expandedIds.add(item.id)
+                View.VISIBLE
             }
         }
     }
 
     override fun getItemId(position: Int): Long {
-        val e = getItem(position)
-        return e?.id ?: RecyclerView.NO_ID
+        return getItem(position)?.id ?: RecyclerView.NO_ID
     }
 
     private class HolidayDecorator(
-            val drawable: Drawable
+            private val drawable: Drawable
     ) : DayViewDecorator {
 
-        val days = HashSet<CalendarDay>()
+        val days = mutableSetOf<CalendarDay>()
 
-        override fun shouldDecorate(day: CalendarDay): Boolean {
-            return days.contains(day)
-        }
+        override fun shouldDecorate(day: CalendarDay): Boolean = days.contains(day)
 
         override fun decorate(view: DayViewFacade) {
             view.setBackgroundDrawable(drawable)

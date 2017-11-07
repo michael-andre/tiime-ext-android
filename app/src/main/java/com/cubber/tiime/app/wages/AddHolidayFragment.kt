@@ -9,7 +9,9 @@ import com.cubber.tiime.databinding.AddHolidayDialogBinding
 import com.cubber.tiime.databinding.AddHolidayDialogItemBinding
 import com.cubber.tiime.model.Holiday
 import com.wapplix.recycler.BindingListAdapter
+import java.io.Serializable
 import java.util.*
+import kotlin.collections.ArrayList
 
 /**
  * Created by mike on 30/10/17.
@@ -57,13 +59,13 @@ class AddHolidayFragment : BottomSheetDialogFragment() {
         private const val ARG_DURATION = "duration"
 
         fun newInstance(wageId: Long, startDate: Date, duration: Int): AddHolidayFragment {
-            val args = Bundle()
-            args.putLong(ARG_WAGE_ID, wageId)
-            args.putSerializable(ARG_START_DATE, startDate)
-            args.putInt(ARG_DURATION, duration)
-            val fragment = AddHolidayFragment()
-            fragment.arguments = args
-            return fragment
+            return AddHolidayFragment().apply {
+                arguments = Bundle().apply {
+                    putLong(ARG_WAGE_ID, wageId)
+                    putSerializable(ARG_START_DATE, startDate)
+                    putInt(ARG_DURATION, duration)
+                }
+            }
         }
     }
 

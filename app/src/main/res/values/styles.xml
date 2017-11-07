@@ -31,7 +31,7 @@
     </style>
 
     <style name="Widget.EditText.Borderless" parent="Widget.AppCompat.EditText">
-        <item name="background">@null</item>
+        <item name="android:background">@null</item>
         <item name="android:paddingTop">8dp</item>
         <item name="android:paddingBottom">8dp</item>
     </style>

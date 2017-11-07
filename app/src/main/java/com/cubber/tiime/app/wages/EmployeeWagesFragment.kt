@@ -38,9 +38,10 @@ class EmployeeWagesFragment : Fragment(), OnDateSelectedListener {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         binding = EmployeeWagesFragmentBinding.inflate(inflater, container, false)
+        model = ViewModelProviders.of(this).get(VM::class.java)
 
         layoutManager = GridLayoutManager(context, 1)
-        val adapter = WagesAdapter(context!!, this)
+        val adapter = WagesAdapter(context!!, model.expandedIds, this)
         binding.list.layoutManager = layoutManager
         binding.list.adapter = adapter
         val parent = parentFragment as WagesFragment
@@ -55,7 +56,6 @@ class EmployeeWagesFragment : Fragment(), OnDateSelectedListener {
             model.currentSource?.invalidate()
         }
 
-        model = ViewModelProviders.of(this).get(VM::class.java)
         val employeeId = arguments!!.getLong(ARG_EMPLOYEE_ID)
         model.init(employeeId)
 
@@ -81,6 +81,7 @@ class EmployeeWagesFragment : Fragment(), OnDateSelectedListener {
     class VM(application: Application) : AndroidViewModel(application) {
 
         var wages: LiveData<PagedList<Wage>>? = null
+        var expandedIds = mutableSetOf<Long>()
         var currentSource: WagesSource? = null
 
         fun init(employeeId: Long) {
