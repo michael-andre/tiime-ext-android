@@ -1,13 +1,14 @@
 package com.wapplix.arch
 
+import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.Observer
-import android.arch.lifecycle.Transformations
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentActivity
+import android.support.v4.app.FragmentManager
 import android.support.v4.content.ContextCompat
 import com.google.common.primitives.Ints
 
@@ -15,23 +16,33 @@ import com.google.common.primitives.Ints
  * Created by mike on 03/10/17.
  */
 
-class PermissionCheck(context: Context, private vararg val permissions: String) : LiveData<IntArray>() {
+class PermissionCheck(
+        context: Context,
+        private vararg val permissions: String
+) : LiveData<IntArray>() {
 
     private val context: Context = context.applicationContext
     private val requestSignal = EventData<Any>()
 
     fun handleOn(activity: FragmentActivity, tag: String) {
-        requestSignal.observe(activity, Observer {
+        handleOn(activity, activity.supportFragmentManager, tag)
+    }
+
+    fun handleOn(fragment: Fragment, tag: String) {
+        handleOn(fragment, fragment.childFragmentManager, tag)
+    }
+
+    private fun handleOn(lifecycleOwner: LifecycleOwner, fragmentManager: FragmentManager, tag: String) {
+        requestSignal.observe(lifecycleOwner, Observer {
             val f = RequestPermissionsFragment()
             f.permissions = permissions
             f.permissionCheck = this
-            activity.supportFragmentManager.beginTransaction().add(f, tag).commit()
+            fragmentManager.beginTransaction().add(f, tag).commit()
         })
     }
 
-    fun granted(): LiveData<Boolean> {
-        return Transformations.map(this
-        ) { results -> results.all { r -> r == PackageManager.PERMISSION_GRANTED } }
+    fun allGranted(): LiveData<Boolean> {
+        return map { results -> results.all { r -> r == PackageManager.PERMISSION_GRANTED } }
     }
 
     override fun onActive() {
@@ -46,8 +57,8 @@ class PermissionCheck(context: Context, private vararg val permissions: String) 
 
     class RequestPermissionsFragment : Fragment() {
 
-        var permissions: Array<out String>? = null
-        var permissionCheck: PermissionCheck? = null
+        lateinit var permissions: Array<out String>
+        lateinit var permissionCheck: PermissionCheck
 
         init {
             retainInstance = true
@@ -56,19 +67,18 @@ class PermissionCheck(context: Context, private vararg val permissions: String) 
         override fun onCreate(savedInstanceState: Bundle?) {
             super.onCreate(savedInstanceState)
             if (savedInstanceState == null) {
-                requestPermissions(permissions!!, REQUEST_PERMISSIONS)
+                requestPermissions(permissions, REQUEST_PERMISSIONS)
             }
         }
 
         override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
             if (requestCode == REQUEST_PERMISSIONS) {
-                permissionCheck!!.postValue(grantResults)
+                permissionCheck.postValue(grantResults)
                 fragmentManager!!.beginTransaction().remove(this).commitAllowingStateLoss()
             }
         }
 
         companion object {
-
             private val REQUEST_PERMISSIONS = 1
         }
 

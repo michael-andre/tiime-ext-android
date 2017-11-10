@@ -119,6 +119,10 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="2"
+                            android:drawableLeft="@drawable/holiday_indicator_paid_vacation"
+                            android:drawablePadding="@dimen/small_spacing"
+                            android:drawableStart="@drawable/holiday_indicator_paid_vacation"
+                            android:gravity="center_vertical"
                             android:text="@string/holiday_type_paid_vacation"
                             android:textAppearance="?attr/textAppearanceListItemSmall" />
 
@@ -135,6 +139,10 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="2"
+                            android:drawableLeft="@drawable/holiday_indicator_compensatory_time"
+                            android:drawablePadding="@dimen/small_spacing"
+                            android:drawableStart="@drawable/holiday_indicator_compensatory_time"
+                            android:gravity="center_vertical"
                             android:text="@string/holiday_type_compensatory_time"
                             android:textAppearance="?textAppearanceListItemSmall" />
 
@@ -151,6 +159,10 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="2"
+                            android:drawableLeft="@drawable/holiday_indicator_sick_leave"
+                            android:drawablePadding="@dimen/small_spacing"
+                            android:drawableStart="@drawable/holiday_indicator_sick_leave"
+                            android:gravity="center_vertical"
                             android:text="@string/holiday_type_sick_leave"
                             android:textAppearance="?textAppearanceListItemSmall" />
 
@@ -167,6 +179,10 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="2"
+                            android:drawableLeft="@drawable/holiday_indicator_work_accident"
+                            android:drawablePadding="@dimen/small_spacing"
+                            android:drawableStart="@drawable/holiday_indicator_work_accident"
+                            android:gravity="center_vertical"
                             android:text="@string/holiday_type_work_accident"
                             android:textAppearance="?textAppearanceListItemSmall" />
 
@@ -183,6 +199,10 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="2"
+                            android:drawableLeft="@drawable/holiday_indicator_family_matters"
+                            android:drawablePadding="@dimen/small_spacing"
+                            android:drawableStart="@drawable/holiday_indicator_family_matters"
+                            android:gravity="center_vertical"
                             android:text="@string/holiday_type_family_matters"
                             android:textAppearance="?textAppearanceListItemSmall" />
 
@@ -199,6 +219,10 @@
                         <TextView
                             android:layout_width="0dp"
                             android:layout_weight="2"
+                            android:drawableLeft="@drawable/holiday_indicator_unpaid_holiday"
+                            android:drawablePadding="@dimen/small_spacing"
+                            android:drawableStart="@drawable/holiday_indicator_unpaid_holiday"
+                            android:gravity="center_vertical"
                             android:text="@string/holiday_type_unpaid_holidays"
                             android:textAppearance="?textAppearanceListItemSmall" />
 

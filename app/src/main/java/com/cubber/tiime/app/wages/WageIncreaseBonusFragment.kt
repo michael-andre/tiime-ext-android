@@ -47,9 +47,9 @@ class WageIncreaseBonusFragment : BottomSheetDialogFragment() {
         }
         typeAdapter.items = listOf(Wage.SALARY_TYPE_NET, Wage.SALARY_TYPE_GROSS)
         binding.increase.applyFormat(euroFormat())
-        binding.increaseType.setAdapter(typeAdapter)
+        binding.increaseType.adapter = typeAdapter
         binding.bonus.applyFormat(euroFormat())
-        binding.bonusType.setAdapter(typeAdapter)
+        binding.bonusType.adapter = typeAdapter
         model.wage.observe(this, Observer { wage ->
             binding.wage = wage
         })

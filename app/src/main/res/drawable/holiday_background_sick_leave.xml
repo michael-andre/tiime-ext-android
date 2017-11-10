@@ -9,8 +9,8 @@
             android:useLevel="false">
             <solid android:color="@color/holiday_sick_leave" />
             <size
-                android:width="@dimen/holiday_icon_size"
-                android:height="@dimen/holiday_icon_size" />
+                android:width="@dimen/holiday_background_size"
+                android:height="@dimen/holiday_background_size" />
         </shape>
     </item>
 </ripple>

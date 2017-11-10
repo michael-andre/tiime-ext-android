@@ -1,4 +1,4 @@
-package com.cubber.tiime.app.allowances
+package com.cubber.tiime.app.mileages
 
 import android.app.Application
 import android.arch.lifecycle.AndroidViewModel

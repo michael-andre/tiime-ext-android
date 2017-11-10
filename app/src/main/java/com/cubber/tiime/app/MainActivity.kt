@@ -1,5 +1,9 @@
 package com.cubber.tiime.app
 
+import android.app.Application
+import android.arch.lifecycle.AndroidViewModel
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.annotation.IdRes
 import android.support.design.widget.NavigationView
@@ -10,9 +14,12 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
 import com.cubber.tiime.R
-import com.cubber.tiime.app.allowances.AllowancesFragment
+import com.cubber.tiime.app.mileages.AllowancesFragment
 import com.cubber.tiime.app.wages.WagesFragment
+import com.cubber.tiime.data.DataRepository
+import com.wapplix.arch.map
 import kotlinx.android.synthetic.main.main_activity.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -28,6 +35,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (savedInstanceState == null) {
             showSection(R.id.mileage_allowances)
         }
+
+        val vm = ViewModelProviders.of(this).get(VM::class.java)
+        vm.pendingWages.observe(this, Observer { b ->
+            val item = navigation_view.menu.findItem(R.id.social)
+            item.actionView.visibility = if (b == true) View.VISIBLE else View.GONE
+        })
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
@@ -43,7 +56,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.mileage_allowances -> showSection(AllowancesFragment::class.java)
             R.id.social -> showSection(WagesFragment::class.java)
         }
-
     }
 
     private fun showSection(fragmentClass: Class<out Fragment>) {
@@ -85,6 +97,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             super.onBackPressed()
         }
+    }
+
+    class VM(app: Application) : AndroidViewModel(app) {
+
+        val pendingWages = DataRepository.of(app).employees()
+                .map { list -> list.any { it.wagesValidationRequired } }
+
     }
 
 }

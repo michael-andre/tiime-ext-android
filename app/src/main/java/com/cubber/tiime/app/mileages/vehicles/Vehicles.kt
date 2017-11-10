@@ -1,4 +1,4 @@
-package com.cubber.tiime.app.allowances.vehicles
+package com.cubber.tiime.app.mileages.vehicles
 
 import com.cubber.tiime.model.Vehicle
 

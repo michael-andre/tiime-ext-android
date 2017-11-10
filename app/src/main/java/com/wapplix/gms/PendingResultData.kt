@@ -1,20 +1,19 @@
 package com.wapplix.gms
 
-import android.arch.core.util.Function
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.Transformations
-
 import com.google.android.gms.common.api.PendingResult
 import com.google.android.gms.common.api.Result
 import com.google.android.gms.common.api.ResultCallback
-
+import com.wapplix.arch.Cancelable
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Created by mike on 29/09/17.
  */
 
-class PendingResultData<T : Result>(private val pendingResult: PendingResult<T>) : LiveData<T>(), ResultCallback<T> {
+class PendingResultData<T : Result>(
+        private val pendingResult: PendingResult<T>
+) : LiveData<T>(), ResultCallback<T>, Cancelable {
 
     private val started = AtomicBoolean(false)
 
@@ -29,23 +28,12 @@ class PendingResultData<T : Result>(private val pendingResult: PendingResult<T>)
         postValue(result)
     }
 
-    companion object {
-
-        fun <U, T : Result> cancellingSwitchMap(trigger: LiveData<U>, switch: (U) -> PendingResult<T>): LiveData<T> {
-            return Transformations.switchMap(trigger, object : Function<U, LiveData<T>> {
-
-                internal var result: PendingResult<T>? = null
-
-                override fun apply(input: U): LiveData<T> {
-                    val newResult = switch(input)
-                    if (result != null && result != newResult) {
-                        result!!.cancel()
-                    }
-                    return PendingResultData(newResult)
-                }
-
-            })
-        }
+    override fun cancel() {
+        pendingResult.cancel()
     }
 
+}
+
+fun <T : Result> PendingResult<T>.toData(): PendingResultData<T> {
+    return PendingResultData(this)
 }

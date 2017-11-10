@@ -5,6 +5,7 @@ package com.cubber.tiime.utils
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.support.annotation.AttrRes
 import android.support.v7.content.res.AppCompatResources
 import com.cubber.tiime.R
 import com.cubber.tiime.model.Holiday
@@ -54,7 +55,7 @@ fun fileIcon(context: Context, uri: Uri?): Drawable? {
     }
 }
 
-fun holidayTypeIndicator(context: Context, @Holiday.Type type: String?): Drawable? {
+fun holidayTypeBackground(context: Context, @Holiday.Type type: String?): Drawable? {
     return when (type) {
         Holiday.TYPE_COMPENSATORY_TIME -> AppCompatResources.getDrawable(context, R.drawable.holiday_background_compensatory_time)
         Holiday.TYPE_FAMILY_MATTERS -> AppCompatResources.getDrawable(context, R.drawable.holiday_background_family_matters)
@@ -84,4 +85,12 @@ fun selectableItemBackgroundBorderless(context: Context): Drawable? {
     val background = ta.getDrawable(0)
     ta.recycle()
     return background
+}
+
+fun resolveDrawableAttr(context: Context, @AttrRes attr: Int) : Drawable? {
+    val attrs = intArrayOf(attr)
+    val ta = context.obtainStyledAttributes(attrs)
+    val drawable = ta.getDrawable(0)
+    ta.recycle()
+    return drawable
 }

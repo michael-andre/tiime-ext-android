@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?selectableItemBackground"
-        android:drawableLeft="@{ res.holidayTypeIndicator(context, type) }"
+        android:drawableStart="@{ res.holidayTypeBackground(context, type) }"
         android:drawablePadding="@dimen/large_spacing"
         android:gravity="center_vertical"
         android:minHeight="?attr/listPreferredItemHeightSmall"

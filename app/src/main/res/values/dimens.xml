@@ -7,5 +7,6 @@
     <dimen name="form_spacing">24dp</dimen>
     <dimen name="trip_polyline_width">4dp</dimen>
     <dimen name="map_height">156dp</dimen>
-    <dimen name="holiday_icon_size">32dp</dimen>
+    <dimen name="holiday_background_size">32dp</dimen>
+    <dimen name="holiday_indicator_size">12dp</dimen>
 </resources>

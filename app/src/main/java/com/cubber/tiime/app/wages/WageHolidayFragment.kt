@@ -36,7 +36,7 @@ class WageHolidayFragment : BottomSheetDialogFragment() {
 
     private inner class Adapter : BindingListAdapter<String, WageHolidayDialogItemBinding>() {
         init {
-            items = Arrays.asList(*Holiday.TYPES)
+            items = Holiday.TYPES.asList()
         }
 
         override fun onCreateViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): WageHolidayDialogItemBinding {

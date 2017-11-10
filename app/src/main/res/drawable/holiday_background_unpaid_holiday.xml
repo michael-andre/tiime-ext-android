@@ -9,8 +9,8 @@
             android:useLevel="false">
             <solid android:color="@color/holiday_unpaid_holiday" />
             <size
-                android:width="@dimen/holiday_icon_size"
-                android:height="@dimen/holiday_icon_size" />
+                android:width="@dimen/holiday_background_size"
+                android:height="@dimen/holiday_background_size" />
         </shape>
     </item>
 </ripple>

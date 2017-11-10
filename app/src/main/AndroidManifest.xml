@@ -20,7 +20,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".app.allowances.AllowanceActivity"
+        <activity android:name=".app.mileages.AllowanceActivity"
             android:theme="@style/AppTheme.DialogWhenLarge"/>
 
         <meta-data

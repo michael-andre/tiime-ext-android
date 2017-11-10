@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/holiday_work_accident" />
+    <size
+        android:width="@dimen/holiday_indicator_size"
+        android:height="@dimen/holiday_indicator_size" />
+</shape>

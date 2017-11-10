@@ -14,8 +14,8 @@ import android.view.ViewGroup
 
 abstract class SimpleAdapter<T> @JvmOverloads constructor(
         context: Context,
-        @param:LayoutRes @field:LayoutRes private val viewResource: Int,
-        @param:LayoutRes @field:LayoutRes private var dropDownViewResource: Int = viewResource
+        @LayoutRes private val viewResource: Int,
+        @LayoutRes private var dropDownViewResource: Int = viewResource
 ) : ListAdapter<T>(), ThemedSpinnerAdapter {
 
     private val dropDownHelper: ThemedSpinnerAdapter.Helper = ThemedSpinnerAdapter.Helper(context)

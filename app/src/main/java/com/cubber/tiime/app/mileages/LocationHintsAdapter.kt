@@ -1,10 +1,9 @@
-package com.cubber.tiime.app.allowances
+package com.cubber.tiime.app.mileages
 
 import android.arch.lifecycle.LifecycleOwner
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Observer
-import android.arch.lifecycle.Transformations
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,12 +16,13 @@ import com.cubber.tiime.model.Client
 import com.cubber.tiime.utils.filterCleaned
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.places.AutocompleteFilter
-import com.google.android.gms.location.places.AutocompletePredictionBuffer
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer
 import com.google.android.gms.location.places.Places
 import com.google.common.base.Optional
 import com.wapplix.arch.EventData
-import com.wapplix.gms.PendingResultData
+import com.wapplix.arch.cancellingSwitchMap
+import com.wapplix.arch.switchMap
+import com.wapplix.gms.toData
 import com.wapplix.widget.ListAdapter
 import java.util.*
 
@@ -46,9 +46,8 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
                 .setCountry("FR")
                 .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
                 .build()
-        Transformations.switchMap<GoogleApiClient, AutocompletePredictionBuffer>(client) { c ->
-            PendingResultData.cancellingSwitchMap<String, AutocompletePredictionBuffer>(mQuery
-            ) { query -> Places.GeoDataApi.getAutocompletePredictions(c, query, null, autocompleteFilter) }
+        client.switchMap { c ->
+            mQuery.cancellingSwitchMap { query -> Places.GeoDataApi.getAutocompletePredictions(c, query, null, autocompleteFilter).toData() }
         }.observe(lifecycleOwner, Observer{ buffer ->
             if (buffer?.status?.isSuccess == true) {
                 autocompletePredictions = buffer.map { Item(

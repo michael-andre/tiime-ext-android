@@ -1,4 +1,4 @@
-package com.cubber.tiime.app.allowances
+package com.cubber.tiime.app.mileages
 
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding

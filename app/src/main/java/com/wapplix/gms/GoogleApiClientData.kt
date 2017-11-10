@@ -21,7 +21,7 @@ class GoogleApiClientData(
     }
 
     override fun onActive() {
-        client!!.connect()
+        client.connect()
     }
 
     override fun onConnected(bundle: Bundle?) {

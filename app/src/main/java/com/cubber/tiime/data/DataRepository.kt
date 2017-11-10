@@ -1,11 +1,12 @@
 package com.cubber.tiime.data
 
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.Transformations
 import android.content.Context
 import com.cubber.tiime.model.*
 import com.google.common.base.Optional
 import com.google.maps.model.EncodedPolyline
+import com.wapplix.arch.SimpleData
+import com.wapplix.arch.map
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,7 +28,7 @@ class DataRepository {
     )
 
     private val employees: List<Employee> = listOf(
-            Employee(id = 1, name = "Peter Parker"),
+            Employee(id = 1, name = "Peter Parker", wagesValidationRequired = true),
             Employee(id = 2, name = "Bruce Wayne")
     )
 
@@ -77,51 +78,31 @@ class DataRepository {
     }()
 
     fun vehicles(): LiveData<List<Vehicle>> {
-        return object : LiveData<List<Vehicle>>() {
-            init {
-                value = vehicles
-            }
-        }
+        return SimpleData(vehicles)
     }
 
     fun defaultVehicleId(): LiveData<Optional<Long>> {
-        return Transformations.map(vehicles()) { vehicles -> Optional.of(vehicles[0].id) }
+        return SimpleData(Optional.of(vehicles[0].id))
     }
 
     fun officeAddress(): LiveData<Optional<String>> {
-        return object : LiveData<Optional<String>>() {
-            init {
-                value = Optional.of("75 boulevard Haussmann, Paris")
-            }
-        }
+        return SimpleData(Optional.of("75 boulevard Haussmann, Paris"))
     }
 
     fun vehicle(id: Long): LiveData<Optional<Vehicle>> {
-        return Transformations.map(vehicles()) { vehicles -> Optional.fromNullable(vehicles.filter { it.id == id }.first()) }
+        return vehicles().map { vehicles -> Optional.fromNullable(vehicles.firstOrNull { it.id == id }) }
     }
 
     fun clients(): LiveData<List<Client>> {
-        return object : LiveData<List<Client>>() {
-            init {
-                value = clients
-            }
-        }
+        return SimpleData(clients)
     }
 
     fun vehicleTypes(): LiveData<List<String>> {
-        return object : LiveData<List<String>>() {
-            init {
-                value = Arrays.asList(Vehicle.TYPE_CAR, Vehicle.TYPE_TWO_WHEELER_1, Vehicle.TYPE_TWO_WHEELER_2)
-            }
-        }
+        return SimpleData(Arrays.asList(Vehicle.TYPE_CAR, Vehicle.TYPE_TWO_WHEELER_1, Vehicle.TYPE_TWO_WHEELER_2))
     }
 
     fun employees(): LiveData<List<Employee>> {
-        return object : LiveData<List<Employee>>() {
-            init {
-                value = employees
-            }
-        }
+        return SimpleData(employees)
     }
 
     fun getEmployeeWages(employeeId: Long, from: Date?, to: Date?): List<Wage> {
@@ -132,11 +113,7 @@ class DataRepository {
     }
 
     fun wage(id: Long): LiveData<Wage?> {
-        return object : LiveData<Wage?>() {
-            init {
-                value = wages.values.flatten().firstOrNull { it.id == id }
-            }
-        }
+        return SimpleData(wages.values.flatten().firstOrNull { it.id == id })
     }
 
     fun getMileageAllowances(start: Int = 0, count: Int?): List<MileageAllowance> {

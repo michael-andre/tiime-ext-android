@@ -1,4 +1,4 @@
-package com.cubber.tiime.app.allowances
+package com.cubber.tiime.app.mileages
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -17,7 +17,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import com.cubber.tiime.R
-import com.cubber.tiime.app.allowances.vehicles.VehiclePickerFragment
+import com.cubber.tiime.app.mileages.vehicles.VehiclePickerFragment
 import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.databinding.AllowanceActivityBinding
 import com.cubber.tiime.model.Client
@@ -29,15 +29,14 @@ import com.cubber.tiime.utils.fullDateFormat
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer
 import com.google.android.gms.location.places.Places
 import com.google.common.base.Optional
-import com.google.maps.model.DirectionsResult
+import com.google.maps.DirectionsApi
 import com.google.maps.model.EncodedPolyline
-import com.wapplix.arch.EventData
-import com.wapplix.arch.PermissionCheck
-import com.wapplix.arch.update
+import com.google.maps.model.TravelMode
+import com.wapplix.arch.*
 import com.wapplix.gms.GoogleApiClientData
-import com.wapplix.gms.PendingResultData
-import com.wapplix.maps.DirectionsData
+import com.wapplix.gms.toData
 import com.wapplix.maps.GeoUtils
+import com.wapplix.maps.toData
 import java.util.*
 import kotlin.collections.HashSet
 
@@ -256,15 +255,11 @@ class AllowanceActivity : AppCompatActivity() {
         val allowanceData = MutableLiveData<MileageAllowance>()
         val allowance: MileageAllowance get() = allowanceData.value!!
 
-        val vehicle: LiveData<Optional<Vehicle>> = Transformations.switchMap(allowanceData) {
+        val vehicle = allowanceData.switchMap {
             if (it.vehicleId != 0L) {
                 DataRepository.of(application).vehicle(it.vehicleId)
             } else {
-                object : LiveData<Optional<Vehicle>>() {
-                    init {
-                        value = Optional.absent()
-                    }
-                }
+                SimpleData(Optional.absent())
             }
         }
 
@@ -272,27 +267,30 @@ class AllowanceActivity : AppCompatActivity() {
         val officeAddress = DataRepository.of(getApplication()).officeAddress()
 
         val locationPermissionCheck = PermissionCheck(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION)
-        private val currentPlace: LiveData<PlaceLikelihoodBuffer> = Transformations.switchMap(locationPermissionCheck.granted()
-        ) { granted ->
+        private val currentPlace: LiveData<PlaceLikelihoodBuffer> = locationPermissionCheck.allGranted().switchMap { granted ->
             @SuppressLint("MissingPermission")
             if (granted)
-                PendingResultData.cancellingSwitchMap(GoogleApiClientData(getApplication()) { addApi(Places.PLACE_DETECTION_API) }) {
-                    c -> Places.PlaceDetectionApi.getCurrentPlace(c, null)
+                GoogleApiClientData(getApplication()) { addApi(Places.PLACE_DETECTION_API) }.cancellingSwitchMap { c ->
+                    Places.PlaceDetectionApi.getCurrentPlace(c, null)
+                            .toData()
                 }
             else
                 null
         }
         val startingCurrentPlaceTrigger = EventData<Any>()
         val arrivalCurrentPlaceTrigger = EventData<Any>()
-        val startingCurrentPlace: LiveData<PlaceLikelihoodBuffer> = Transformations.switchMap<Any, PlaceLikelihoodBuffer>(startingCurrentPlaceTrigger) { currentPlace }
-        val arrivalCurrentPlace: LiveData<PlaceLikelihoodBuffer> = Transformations.switchMap<Any, PlaceLikelihoodBuffer>(arrivalCurrentPlaceTrigger) { currentPlace }
+        val startingCurrentPlace = startingCurrentPlaceTrigger.switchMap { currentPlace }
+        val arrivalCurrentPlace = arrivalCurrentPlaceTrigger.switchMap { currentPlace }
         val directionsTrigger = EventData<Any>()
         val directionsLoading = MutableLiveData<Boolean>()
-        val directions: LiveData<DirectionsResult> = Transformations.switchMap<Any, DirectionsResult>(directionsTrigger) {
+        val directions = directionsTrigger.cancellingSwitchMap {
             val exp = allowanceData.value
             if (exp != null && !TextUtils.isEmpty(exp.from) && !TextUtils.isEmpty(exp.to)) {
                 directionsLoading.postValue(true)
-                DirectionsData(application, exp.from!!, exp.to!!)
+                DirectionsApi.getDirections(GeoUtils.getGeoApiContext(application), exp.from, exp.to)
+                        .mode(TravelMode.DRIVING)
+                        .alternatives(false)
+                        .toData()
             } else {
                 null
             }

@@ -8,11 +8,16 @@ import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AppCompatActivity
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.style.ImageSpan
 import android.view.*
 import com.cubber.tiime.R
 import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.databinding.WagesFragmentBinding
 import com.cubber.tiime.model.Employee
+
+
 
 /**
  * Created by mike on 21/09/17.
@@ -56,35 +61,36 @@ class WagesFragment : Fragment() {
         })
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when (item!!.itemId) {
-            R.id.view_year -> {
-                model.viewYear.postValue(!item.isChecked)
-                return true
-            }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.view_year -> { model.viewYear.postValue(!item.isChecked); true }
+            else -> super.onOptionsItemSelected(item)
         }
-        return super.onOptionsItemSelected(item)
     }
 
     private inner class Adapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
 
-        private var mEmployees: List<Employee>? = null
+        private var employees: List<Employee>? = null
+        private val indicatorSpan by lazy { ImageSpan(context, R.drawable.indicator_action_required_small, ImageSpan.ALIGN_BASELINE) }
 
         fun setEmployees(employees: List<Employee>?) {
-            mEmployees = employees
+            this.employees = employees
             notifyDataSetChanged()
         }
 
-        override fun getCount(): Int {
-            return if (mEmployees == null) 0 else mEmployees!!.size
-        }
+        override fun getCount(): Int = if (employees == null) 0 else employees!!.size
 
-        override fun getItem(position: Int): Fragment {
-            return EmployeeWagesFragment.newInstance(mEmployees!![position].id)
-        }
+        override fun getItem(position: Int): Fragment = EmployeeWagesFragment.newInstance(employees!![position].id)
 
         override fun getPageTitle(position: Int): CharSequence? {
-            return mEmployees!![position].name
+            val employee = employees!![position]
+            val builder = SpannableStringBuilder()
+            builder.append(employee.name)
+            if (employee.wagesValidationRequired) {
+                builder.append(" *")
+                builder.setSpan(indicatorSpan, builder.length - 1, builder.length, Spannable.SPAN_INCLUSIVE_INCLUSIVE)
+            }
+            return builder
         }
 
     }
@@ -92,7 +98,6 @@ class WagesFragment : Fragment() {
     class VM(application: Application) : AndroidViewModel(application) {
 
         var employees = DataRepository.of(getApplication()).employees()
-
         var viewYear = MutableLiveData<Boolean>()
 
         init {
