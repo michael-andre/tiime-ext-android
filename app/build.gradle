@@ -18,10 +18,10 @@ android {
     buildTypes {
         release {
             postprocessing {
-                removeUnusedCode false
-                removeUnusedResources false
-                obfuscate false
-                optimizeCode false
+                removeUnusedCode true
+                removeUnusedResources true
+                obfuscate true
+                optimizeCode true
                 proguardFile 'proguard-rules.pro'
             }
         }

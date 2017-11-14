@@ -24,7 +24,7 @@ fun <T, U> LiveData<T>.map(mapper: (T) -> U): LiveData<U> {
     return Transformations.map(this, mapper)
 }
 
-fun <T, U, R> LiveData<T>.cancellingSwitchMap(mapper: (T) -> R?): LiveData<U> where R : LiveData<U>, R : Cancelable {
+fun <T, U, R> LiveData<T>.cancellingSwitchMap(mapper: (T?) -> R?): LiveData<U> where R : LiveData<U>, R : Cancelable {
     return Transformations.switchMap(this, object : Function<T, LiveData<U>?> {
 
         private var current: Cancelable? = null
