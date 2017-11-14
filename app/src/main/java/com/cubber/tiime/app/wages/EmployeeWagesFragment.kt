@@ -21,6 +21,7 @@ import com.cubber.tiime.R
 import com.cubber.tiime.data.WagesSource
 import com.cubber.tiime.databinding.EmployeeWagesFragmentBinding
 import com.cubber.tiime.model.Wage
+import com.wapplix.recycler.AutoGridLayoutManager
 import java.util.*
 
 /**
@@ -31,21 +32,22 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
 
     private lateinit var model: VM
     private lateinit var binding: EmployeeWagesFragmentBinding
-    private lateinit var layoutManager: GridLayoutManager
+    private lateinit var layoutManager: AutoGridLayoutManager
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         binding = EmployeeWagesFragmentBinding.inflate(inflater, container, false)
         model = ViewModelProviders.of(this).get(VM::class.java)
 
-        layoutManager = GridLayoutManager(context, 1)
+        layoutManager = AutoGridLayoutManager(context!!, resources.getDimensionPixelSize(R.dimen.handset_card_width))
         val adapter = WagesAdapter(context!!, model.expandedIds, this)
         binding.list.layoutManager = layoutManager
         binding.list.adapter = adapter
         val parent = parentFragment as WagesFragment
         parent.viewYearData.observe(this, Observer { viewYear ->
-            layoutManager.spanCount = if (viewYear == true) 2 else 1
-            adapter.setViewYear(viewYear == true)
+            layoutManager.columnWidth = resources.getDimensionPixelSize(
+                    if (viewYear == true) R.dimen.handset_dual_card_width else R.dimen.handset_card_width
+            )
             TransitionManager.beginDelayedTransition(binding.root.parent as ViewGroup)
         })
 

@@ -9,4 +9,6 @@
     <dimen name="map_height">156dp</dimen>
     <dimen name="holiday_background_size">32dp</dimen>
     <dimen name="holiday_indicator_size">12dp</dimen>
+    <dimen name="handset_card_width">300dp</dimen>
+    <dimen name="handset_dual_card_width">150dp</dimen>
 </resources>
