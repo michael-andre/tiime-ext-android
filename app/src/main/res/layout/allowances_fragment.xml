@@ -36,8 +36,9 @@
                 android:id="@+id/list"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+                android:columnWidth="@dimen/handset_card_width"
                 app:items="@{ allowances }"
+                app:layoutManager="com.wapplix.recycler.AutoGridLayoutManager"
                 tools:listitem="@layout/allowance_item" />
 
         </android.support.v4.widget.SwipeRefreshLayout>

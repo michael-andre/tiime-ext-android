@@ -1,12 +1,14 @@
 package com.wapplix.recycler
 
 import android.content.Context
-import android.support.annotation.AttrRes
+import android.os.Parcel
+import android.os.Parcelable
 import android.support.annotation.Dimension
-import android.support.annotation.StyleRes
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.util.AttributeSet
+import android.view.View
+import com.wapplix.utils.createParcel
 
 /**
  * Created by mike on 08/11/2017.
@@ -34,12 +36,51 @@ class AutoGridLayoutManager : GridLayoutManager {
             requestLayout()
         }
 
-    override fun onMeasure(recycler: RecyclerView.Recycler?, state: RecyclerView.State?, widthSpec: Int, heightSpec: Int) {
-        super.onMeasure(recycler, state, widthSpec, heightSpec)
+    override fun onLayoutChildren(recycler: RecyclerView.Recycler?, state: RecyclerView.State?) {
         if (columnWidth > 0) {
-            val spanCount = Math.max(1, width / columnWidth)
-            setSpanCount(spanCount)
+            val c = Math.max(1, width / columnWidth)
+            if (spanCount != c) {
+                spanCount = c
+            }
         }
+        super.onLayoutChildren(recycler, state)
+    }
+
+    override fun onSaveInstanceState(): Parcelable {
+        return SavedState(super.onSaveInstanceState())
+                .also { it.columnWidth = columnWidth }
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state is SavedState) {
+            super.onRestoreInstanceState(state.superState)
+            columnWidth = state.columnWidth
+        } else {
+            super.onRestoreInstanceState(state)
+        }
+    }
+
+    class SavedState : View.BaseSavedState {
+
+        var columnWidth: Int = 0
+
+        constructor(superState: Parcelable) : super(superState)
+        private constructor(source: Parcel) : super(source) {
+            columnWidth = source.readInt()
+        }
+
+        override fun writeToParcel(out: Parcel, flags: Int) {
+            super.writeToParcel(out, flags)
+            out.writeInt(columnWidth)
+        }
+
+        companion object {
+
+            @JvmField @Suppress("unused")
+            val CREATOR = createParcel { SavedState(it) }
+
+        }
+
     }
 
 }

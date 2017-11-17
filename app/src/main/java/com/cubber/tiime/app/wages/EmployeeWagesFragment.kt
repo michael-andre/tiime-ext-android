@@ -13,7 +13,6 @@ import android.support.design.widget.Snackbar
 import android.support.transition.TransitionManager
 import android.support.v4.app.Fragment
 import android.support.v4.util.LongSparseArray
-import android.support.v7.widget.GridLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -48,6 +47,7 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
             layoutManager.columnWidth = resources.getDimensionPixelSize(
                     if (viewYear == true) R.dimen.handset_dual_card_width else R.dimen.handset_card_width
             )
+            adapter.viewYear = viewYear == true
             TransitionManager.beginDelayedTransition(binding.root.parent as ViewGroup)
         })
 

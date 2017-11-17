@@ -27,7 +27,7 @@ class WagesSource(context: Context, private val employeeId: Long) : KeyedDataSou
         val to = cal.time
         cal.add(Calendar.MONTH, -pageSize)
         val from = cal.time
-        return DataRepository.of(context).getEmployeeWages(employeeId, from, to)
+        return load(from, to)
     }
 
     override fun loadAfter(currentEndKey: Date, pageSize: Int): List<Wage>? {
@@ -37,7 +37,7 @@ class WagesSource(context: Context, private val employeeId: Long) : KeyedDataSou
         val to = cal.time
         cal.add(Calendar.MONTH, -pageSize)
         val from = cal.time
-        return DataRepository.of(context).getEmployeeWages(employeeId, from, to)
+        return load(from, to)
     }
 
     override fun loadBefore(currentBeginKey: Date, pageSize: Int): List<Wage>? {
@@ -47,6 +47,10 @@ class WagesSource(context: Context, private val employeeId: Long) : KeyedDataSou
         val from = cal.time
         cal.add(Calendar.MONTH, pageSize)
         val to = cal.time
+        return load(from, to).reversed()
+    }
+
+    private fun load(from: Date, to: Date): List<Wage> {
         return DataRepository.of(context).getEmployeeWages(employeeId, from, to)
     }
 

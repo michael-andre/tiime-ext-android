@@ -2,7 +2,6 @@ package com.wapplix.widget
 
 import android.content.Context
 import android.os.Build
-import android.support.annotation.RequiresApi
 import android.text.*
 import android.text.method.DigitsKeyListener
 import android.util.AttributeSet
@@ -103,47 +102,49 @@ class NumberEditText : AffixEditText {
 
     class DigitsKeyListenerCompat : DigitsKeyListener {
 
+        private val point = arrayOf(".")
+
         private val acceptedChars: CharArray
         private val decimalSeparator: Array<String>
         private val signed: Boolean
 
         constructor(signed: Boolean, separator: Char) : super(signed, true) {
-            acceptedChars = super.getAcceptedChars().plus(separator)
+            val chars = super.getAcceptedChars()
+            acceptedChars = if (chars.contains(separator)) chars else chars.plus(separator)
             decimalSeparator = arrayOf(Character.toString(separator))
             this.signed = signed
         }
 
-        @RequiresApi(Build.VERSION_CODES.O)
         constructor(locale: Locale, signed: Boolean, separator: Char) : super(locale, signed, true) {
-            acceptedChars = super.getAcceptedChars().plus(separator)
+            val chars = super.getAcceptedChars().plus('.')
+            acceptedChars = if (chars.contains(separator)) chars else chars.plus(separator)
             decimalSeparator = arrayOf(Character.toString(separator))
             this.signed = signed
         }
 
-        override fun getAcceptedChars(): CharArray {
-            return acceptedChars
+        override fun getAcceptedChars(): CharArray = acceptedChars
+
+        override fun getInputType(): Int {
+            var type = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+            if (signed) type = type or InputType.TYPE_NUMBER_FLAG_SIGNED
+            return type
         }
 
         override fun filter(source: CharSequence, start: Int, end: Int, dest: Spanned, dstart: Int, dend: Int): CharSequence {
             var source = source
             var dest = dest
-            source = TextUtils.replace(source, decimalSeparator, POINT)
-            dest = SpannedString(TextUtils.replace(dest, decimalSeparator, POINT))
+            source = TextUtils.replace(source, decimalSeparator, point)
+            dest = SpannedString(TextUtils.replace(dest, decimalSeparator, point))
             // Allow double decimal separator (Samsung keyboard)
-            if (signed && TextUtils.equals(POINT[0], source) && dest.length == 1 && POINT[0] == dest.toString()) {
+            if (signed && TextUtils.equals(point[0], source) && dest.length == 1 && point[0] == dest.toString()) {
                 return decimalSeparator[0]
             }
             val out = super.filter(source, start, end, dest, dstart, dend)
             return if (out != null) {
-                TextUtils.replace(out, POINT, decimalSeparator)
+                TextUtils.replace(out, point, decimalSeparator)
             } else {
-                TextUtils.replace(source.subSequence(start, end), POINT, decimalSeparator)
+                TextUtils.replace(source.subSequence(start, end), point, decimalSeparator)
             }
-        }
-
-        companion object {
-
-            private val POINT = arrayOf(".")
         }
 
     }

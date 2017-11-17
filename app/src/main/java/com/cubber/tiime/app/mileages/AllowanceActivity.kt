@@ -45,12 +45,12 @@ import kotlin.collections.HashSet
  */
 class AllowanceActivity : AppCompatActivity() {
 
-    private lateinit var vm: VM
+    private lateinit var model: VM
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        vm = ViewModelProviders.of(this).get(VM::class.java)
+        model = ViewModelProviders.of(this).get(VM::class.java)
 
         val b = DataBindingUtil.setContentView<AllowanceActivityBinding>(this, R.layout.allowance_activity)
         b.addOnRebindCallback(object : AllowanceBindingCallback<AllowanceActivityBinding>() {
@@ -93,7 +93,7 @@ class AllowanceActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) b.reason.requestFocus()
         hintsAdapter.onClientHintClick = { client ->
-            vm.setClient(client)
+            model.setClient(client)
             expandAddresses(b)
             b.startingAddress.requestFocus()
         }
@@ -103,7 +103,7 @@ class AllowanceActivity : AppCompatActivity() {
         ArchDialogs.resultOf(VehiclePickerFragment::class.java, "vehicle_picker", this)
                 .observe(this, Observer { vehicle ->
                     if (vehicle != null) {
-                        vm.setVehicle(vehicle)
+                        model.setVehicle(vehicle)
                     }
                 })
 
@@ -112,7 +112,7 @@ class AllowanceActivity : AppCompatActivity() {
             expandAddresses(b)
             b.startingAddress.requestFocus()
         }
-        if (!TextUtils.isEmpty(vm.allowance.from) || !TextUtils.isEmpty(vm.allowance.to)) {
+        if (!TextUtils.isEmpty(model.allowance.from) || !TextUtils.isEmpty(model.allowance.to)) {
             expandAddresses(b)
         }
 
@@ -120,8 +120,8 @@ class AllowanceActivity : AppCompatActivity() {
         val googleApiClient = GoogleApiClientData(this) { addApi(Places.GEO_DATA_API) }
         val startingAddressAdapter = LocationHintsAdapter(googleApiClient, this)
         b.startingAddress.setAdapter(startingAddressAdapter)
-        b.startingAddress.onItemClickListener = startingAddressAdapter.getItemListener(vm.startingCurrentPlaceTrigger)
-        vm.startingCurrentPlace.observe(this, Observer { places ->
+        b.startingAddress.onItemClickListener = startingAddressAdapter.getItemListener(model.startingCurrentPlaceTrigger)
+        model.startingCurrentPlace.observe(this, Observer { places ->
             startingAddressAdapter.setCurrentPlaces(places)
             b.startingAddress.showDropDown()
         })
@@ -130,7 +130,7 @@ class AllowanceActivity : AppCompatActivity() {
                 if (TextUtils.isEmpty(b.arrivalAddress.text)) {
                     b.arrivalAddress.requestFocus()
                 } else {
-                    vm.directionsTrigger.trigger()
+                    model.directionsTrigger.trigger()
                     Views.hideSoftInput(textView)
                 }
                 true
@@ -138,24 +138,24 @@ class AllowanceActivity : AppCompatActivity() {
         }
         val arrivalAddressAdapter = LocationHintsAdapter(googleApiClient, this)
         b.arrivalAddress.setAdapter(arrivalAddressAdapter)
-        b.arrivalAddress.onItemClickListener = arrivalAddressAdapter.getItemListener(vm.arrivalCurrentPlaceTrigger)
-        vm.arrivalCurrentPlace.observe(this, Observer { places ->
+        b.arrivalAddress.onItemClickListener = arrivalAddressAdapter.getItemListener(model.arrivalCurrentPlaceTrigger)
+        model.arrivalCurrentPlace.observe(this, Observer { places ->
             arrivalAddressAdapter.setCurrentPlaces(places)
             b.arrivalAddress.showDropDown()
         })
         b.arrivalAddress.setOnEditorActionListener { textView, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                vm.directionsTrigger.trigger()
+                model.directionsTrigger.trigger()
                 Views.hideSoftInput(textView)
                 true
             } else false
         }
         b.arrivalAddress.setOnItemClickListener { _, _, _, _ ->
-            vm.directionsTrigger.trigger()
+            model.directionsTrigger.trigger()
             Views.hideSoftInput(b.arrivalAddress)
         }
-        vm.locationPermissionCheck.handleOn(this, "location_permission")
-        vm.officeAddress.observe(this, Observer { address ->
+        model.locationPermissionCheck.handleOn(this, "location_permission")
+        model.officeAddress.observe(this, Observer { address ->
             if (address != null) {
                 startingAddressAdapter.setOfficeAddress(address)
                 arrivalAddressAdapter.setOfficeAddress(address)
@@ -165,28 +165,28 @@ class AllowanceActivity : AppCompatActivity() {
         // Map
         b.map.onCreate(savedInstanceState)
         b.map.getMapAsync { map ->
-            map.setOnMapClickListener { vm.directionsTrigger.trigger() }
+            map.setOnMapClickListener { model.directionsTrigger.trigger() }
             map.uiSettings.isMapToolbarEnabled = false
         }
-        vm.directions.observe(this, Observer { result ->
-            vm.directionsLoading.postValue(false)
+        model.directions.observe(this, Observer { result ->
+            model.directionsLoading.postValue(false)
             if (result != null) {
                 if (result.routes.isEmpty()) {
                     Snackbar.make(b.root, R.string.no_directions_found, Snackbar.LENGTH_SHORT).show()
                 } else {
                     var distance = GeoUtils.getDistance(result.routes[0])
                     if (b.roundTrip.isChecked) distance *= 2
-                    val currentDistance = vm.allowance.distance
+                    val currentDistance = model.allowance.distance
                     if (currentDistance != null && currentDistance.toDouble() != distance) {
                         Snackbar.make(b.root, R.string.distance_updated, Snackbar.LENGTH_LONG)
-                                .setAction(android.R.string.cancel) { vm.setDistance(currentDistance) }
+                                .setAction(android.R.string.cancel) { model.setDistance(currentDistance) }
                                 .show()
                     }
-                    vm.setPolyline(result.routes[0].overviewPolyline, distance.toInt())
+                    model.setPolyline(result.routes[0].overviewPolyline, distance.toInt())
                 }
             }
         })
-        vm.directionsLoading.observe(this, Observer { loading ->
+        model.directionsLoading.observe(this, Observer { loading ->
             if (loading == true)
                 b.mapProgress.show()
             else
@@ -194,18 +194,18 @@ class AllowanceActivity : AppCompatActivity() {
         })
 
         // Round trip
-        b.roundTrip.setOnCheckedChangeListener { _, checked -> vm.toggleRoundTrip(checked) }
+        b.roundTrip.setOnCheckedChangeListener { _, checked -> model.toggleRoundTrip(checked) }
 
         // Dates
         b.datesLayout.setOnClickListener {
-            DatesPickerFragment.newInstance(vm.allowance.dates)
+            DatesPickerFragment.newInstance(model.allowance.dates)
                     .showForResult(this, "dates_picker")
         }
         ArchDialogs.resultOf(DatesPickerFragment::class.java, "dates_picker", this)
-                .observe(this, Observer { if (it != null) vm.setDates(it) })
+                .observe(this, Observer { if (it != null) model.setDates(it) })
 
         // Data
-        vm.allowanceData.observe(this, Observer { exp ->
+        model.allowanceData.observe(this, Observer { exp ->
             b.allowance = exp
 
             // Bind dates
@@ -213,8 +213,8 @@ class AllowanceActivity : AppCompatActivity() {
             b.dates.text = TextUtils.join("\n", exp?.dates?.map { dateFormat.format(it) })
 
         })
-        vm.vehicle.observe(this, Observer { b.vehicle = it })
-        vm.clients.observe(this, Observer { clients ->
+        model.vehicle.observe(this, Observer { b.vehicle = it })
+        model.clients.observe(this, Observer { clients ->
             hintsAdapter.setClients(clients)
             startingAddressAdapter.setClients(clients)
             arrivalAddressAdapter.setClients(clients)
@@ -228,7 +228,7 @@ class AllowanceActivity : AppCompatActivity() {
         b.map.visibility = View.VISIBLE
         b.roundTrip.visibility = View.VISIBLE
         b.expandTrip.visibility = View.GONE
-        if (java.lang.Boolean.TRUE == vm.directionsLoading.value) {
+        if (model.directionsLoading.value == true) {
             b.mapProgress.show()
         }
     }

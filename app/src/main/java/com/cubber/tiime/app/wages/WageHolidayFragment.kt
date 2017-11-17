@@ -1,6 +1,9 @@
 package com.cubber.tiime.app.wages
 
+import android.app.Dialog
 import android.os.Bundle
+import android.support.design.widget.BottomSheetBehavior
+import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.BottomSheetDialogFragment
 import android.view.LayoutInflater
 import android.view.View
@@ -17,8 +20,10 @@ import java.util.*
 
 class WageHolidayFragment : BottomSheetDialogFragment() {
 
+    lateinit var binding: WageHolidayDialogBinding
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val binding = WageHolidayDialogBinding.inflate(inflater, container, false)
+        binding = WageHolidayDialogBinding.inflate(inflater, container, false)
 
         binding.type.adapter = Adapter()
 
@@ -28,6 +33,14 @@ class WageHolidayFragment : BottomSheetDialogFragment() {
         binding.toolbar.title = Wages.getShortDatesSummary(startDate, duration)
 
         return binding.root
+    }
+
+    override fun setupDialog(dialog: Dialog, style: Int) {
+        super.setupDialog(dialog, style)
+        dialog.setOnShowListener {
+            val behavior = BottomSheetBehavior.from((it as BottomSheetDialog).findViewById<View>(android.support.design.R.id.design_bottom_sheet))
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
     }
 
     private fun addHoliday(@Holiday.Type type: String) {

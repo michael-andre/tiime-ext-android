@@ -1,15 +1,19 @@
 package com.cubber.tiime.app.wages
 
 import android.app.Application
+import android.app.Dialog
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.design.widget.BottomSheetBehavior
+import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.BottomSheetDialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.TextView
 import com.cubber.tiime.R
 import com.cubber.tiime.data.DataRepository
@@ -54,6 +58,15 @@ class WageIncreaseBonusFragment : BottomSheetDialogFragment() {
             binding.wage = wage
         })
         return binding.root
+    }
+
+    override fun setupDialog(dialog: Dialog, style: Int) {
+        super.setupDialog(dialog, style)
+        dialog.window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        dialog.setOnShowListener {
+            val behavior = BottomSheetBehavior.from((it as BottomSheetDialog).findViewById<View>(android.support.design.R.id.design_bottom_sheet))
+            behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        }
     }
 
     private fun saveWage() {

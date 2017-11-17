@@ -38,7 +38,11 @@ class WagesAdapter(
         fun onEditIncreaseBonus(item: Wage)
     }
 
-    private var viewYear: Boolean = false
+    var viewYear: Boolean = false
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
 
     private val holidayDecorators =  Holiday.TYPES.associate {
         it to HolidayDecorator(holidayTypeBackground(context, it)!!)
@@ -90,11 +94,6 @@ class WagesAdapter(
                 }
             }
         }
-    }
-
-    fun setViewYear(displayYear: Boolean) {
-        viewYear = displayYear
-        notifyDataSetChanged()
     }
 
     override fun onCreateViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): WageItemBinding {

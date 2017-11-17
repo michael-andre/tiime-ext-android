@@ -27,16 +27,22 @@
                 android:id="@+id/map"
                 android:layout_width="0dp"
                 android:layout_height="156dp"
-                android:layout_marginBottom="@dimen/small_spacing"
-                android:background="?colorButtonNormal"
-                app:visible="@{ allowance.polyline != null }"
-                app:layout_constraintBottom_toTopOf="@+id/reason"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:liteMode="true"
                 app:mapType="normal"
+                app:visible="@{ allowance.polyline != null }"
                 tools:visibility="visible" />
+
+            <android.support.v4.widget.ContentLoadingProgressBar
+                style="?android:progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="@id/map"
+                app:layout_constraintTop_toTopOf="@id/map"
+                app:layout_constraintStart_toStartOf="@id/map"
+                app:layout_constraintEnd_toEndOf="@id/map" />
 
             <TextView
                 android:id="@+id/reason"
@@ -49,7 +55,6 @@
                 android:maxLines="1"
                 android:text="@{ allowance.reason }"
                 android:textAppearance="?textAppearanceListItem"
-                app:layout_constraintBottom_toTopOf="@id/date"
                 app:layout_constraintEnd_toStartOf="@id/distance"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/map"
