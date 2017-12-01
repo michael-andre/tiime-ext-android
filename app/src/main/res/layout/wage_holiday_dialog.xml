@@ -39,7 +39,6 @@
             android:id="@+id/type"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
             tools:listitem="@layout/wage_holiday_dialog_item">
 
         </android.support.v7.widget.RecyclerView>

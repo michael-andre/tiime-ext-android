@@ -11,7 +11,7 @@ data class Holiday(
     var id: Long = 0,
     var startDate: Date? = null,
     @Type var type: String? = null,
-    var duration: Short = 0
+    var duration: Int = 0
 ) {
 
     @Retention(AnnotationRetention.SOURCE)
@@ -20,7 +20,7 @@ data class Holiday(
 
     companion object {
 
-        fun create(id: Long, startDate: Date, type: String, duration: Short): Holiday {
+        fun create(id: Long, startDate: Date, type: String, duration: Int): Holiday {
             val holiday = Holiday()
             holiday.id = id
             holiday.startDate = startDate

@@ -4,7 +4,14 @@ import android.arch.paging.PagedList
 import android.content.Context
 import android.databinding.OnRebindCallback
 import android.graphics.drawable.Drawable
+import android.graphics.drawable.InsetDrawable
+import android.graphics.drawable.RippleDrawable
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.ArcShape
+import android.graphics.drawable.shapes.OvalShape
+import android.os.Build
 import android.support.transition.TransitionManager
+import android.support.v4.content.ContextCompat
 import android.support.v4.util.LongSparseArray
 import android.support.v7.widget.RecyclerView
 import android.text.format.DateUtils
@@ -15,7 +22,7 @@ import com.cubber.tiime.R
 import com.cubber.tiime.databinding.WageItemBinding
 import com.cubber.tiime.model.Holiday
 import com.cubber.tiime.model.Wage
-import com.cubber.tiime.utils.holidayTypeBackground
+import com.cubber.tiime.utils.holidayTypeColor
 import com.cubber.tiime.utils.resolveDrawableAttr
 import com.prolificinteractive.materialcalendarview.*
 import com.prolificinteractive.materialcalendarview.format.DayFormatter
@@ -33,20 +40,12 @@ class WagesAdapter(
 ) : BindingPagedListAdapter<Wage, WageItemBinding>({ id }) {
 
     interface Listener {
-        fun onDateSelected(date: Date)
+        fun onDateSelected(date: Date, days: Int)
         fun onEditComment(item: Wage)
         fun onEditIncreaseBonus(item: Wage)
     }
 
-    var viewYear: Boolean = false
-        set(value) {
-            field = value
-            notifyDataSetChanged()
-        }
-
-    private val holidayDecorators =  Holiday.TYPES.associate {
-        it to HolidayDecorator(holidayTypeBackground(context, it)!!)
-    }
+    private val holidayDecorators = mutableMapOf<DecoratorKey, HolidayDecorator>()
     private val commonDayDecorator = object : DayViewDecorator {
 
         private val background = resolveDrawableAttr(context, R.attr.selectableItemBackgroundBorderless)!!
@@ -56,22 +55,22 @@ class WagesAdapter(
         override fun decorate(view: DayViewFacade) = view.setBackgroundDrawable(background)
 
     }
-    
-    private val weekDayFormatter = WeekDayFormatter { dayOfWeek ->
-        if (viewYear)
-            DateUtils.getDayOfWeekString(dayOfWeek, DateUtils.LENGTH_SHORTEST)
-        else
-            WeekDayFormatter.DEFAULT.format(dayOfWeek)
-    }
-    private val dayFormatter = DayFormatter { day -> if (viewYear) "•" else DayFormatter.DEFAULT.format(day) }
+
+    private val weekDayFormatter = WeekDayFormatter { dayOfWeek -> DateUtils.getDayOfWeekString(dayOfWeek, DateUtils.LENGTH_SHORTEST) }
+    private val dayFormatter = DayFormatter { day -> DayFormatter.DEFAULT.format(day) }
 
     private val dateListener = OnDateSelectedListener { view, d, _ ->
-        view.setDateSelected(d, false)
-        listener.onDateSelected(d.date)
+        listener.onDateSelected(d.date, 1)
+        view.clearSelection()
+    }
+    private val rangeListener = OnRangeSelectedListener { view, d ->
+        listener.onDateSelected(d[0].date, d.size)
+        view.clearSelection()
     }
 
     init {
         setHasStableIds(true)
+        initHolidayDecorators(context)
     }
 
     override fun setList(pagedList: PagedList<Wage>?) {
@@ -83,7 +82,8 @@ class WagesAdapter(
         val cal = Calendar.getInstance()
         for (wage in pagedList) {
             for (holiday in wage.holidays.orEmpty()) {
-                val d = holidayDecorators[holiday.type] ?: continue
+                val type = if (Holiday.TYPES.contains(holiday.type)) holiday.type else null
+                val d = holidayDecorators[DecoratorKey(type, holiday.duration == 1, wage.editable)]!!
                 d.days.add(CalendarDay.from(holiday.startDate))
                 if (holiday.duration > 2) {
                     cal.time = holiday.startDate
@@ -102,9 +102,9 @@ class WagesAdapter(
             calendar.isPagingEnabled = false
             calendar.isDynamicHeightEnabled = true
             calendar.selectionMode = MaterialCalendarView.SELECTION_MODE_SINGLE
-            calendar.addDecorator(commonDayDecorator)
             calendar.addDecorators(holidayDecorators.values)
             calendar.setOnDateChangedListener(dateListener)
+            calendar.setOnRangeSelectedListener(rangeListener)
             calendar.setWeekDayFormatter(weekDayFormatter)
             calendar.setDayFormatter(dayFormatter)
             toolbar.inflateMenu(R.menu.wage_context)
@@ -115,9 +115,8 @@ class WagesAdapter(
 
                 override fun onBound(binding: WageItemBinding?) {
                     binding?.wage?.apply {
-                        val showMenu = !viewYear && editable
-                        increaseBonusItem.isVisible = showMenu
-                        commentItem.isVisible = showMenu
+                        increaseBonusItem.isVisible = editable
+                        commentItem.isVisible = editable
                     }
                 }
 
@@ -126,11 +125,10 @@ class WagesAdapter(
     }
 
     override fun onBindView(binding: WageItemBinding, item: Wage) {
-        with (binding) {
+        with(binding) {
             wage = item
-            displayYear = viewYear
             holidaysSummary = Wages.getHolidaysSummary(item)
-            calendar.visibility = if (viewYear || shouldExpand(item)) View.VISIBLE else View.GONE
+            calendar.visibility = if (shouldExpand(item)) View.VISIBLE else View.GONE
             with(calendar.state().edit()) {
                 val cal = Calendar.getInstance()
                 cal.time = item.period
@@ -140,6 +138,7 @@ class WagesAdapter(
                 setMaximumDate(cal)
                 commit()
             }
+            calendar.invalidateDecorators()
             holidaysRow.setOnClickListener {
                 TransitionManager.beginDelayedTransition(root.parent as ViewGroup)
                 val expanded = calendar.visibility != View.VISIBLE
@@ -148,8 +147,12 @@ class WagesAdapter(
             }
             toolbar.setOnMenuItemClickListener {
                 when (it.itemId) {
-                    R.id.comment -> { listener.onEditComment(item); true }
-                    R.id.increase_bonus -> { listener.onEditIncreaseBonus(item); true }
+                    R.id.comment -> {
+                        listener.onEditComment(item); true
+                    }
+                    R.id.increase_bonus -> {
+                        listener.onEditIncreaseBonus(item); true
+                    }
                     else -> false
                 }
             }
@@ -171,11 +174,47 @@ class WagesAdapter(
         return getItem(position)?.id ?: RecyclerView.NO_ID
     }
 
-    private class HolidayDecorator(
-            private val drawable: Drawable
-    ) : DayViewDecorator {
+    private fun initHolidayDecorators(context: Context) {
+        for (type in Holiday.TYPES) {
+            initHolidayDecorators(context, type)
+        }
+        initHolidayDecorators(context, null)
+    }
+
+    private fun initHolidayDecorators(context: Context, @Holiday.Type type: String?) {
+        initHolidayDecorator(context, type, true, true)
+        initHolidayDecorator(context, type, true, false)
+        initHolidayDecorator(context, type, false, true)
+        initHolidayDecorator(context, type, false, false)
+    }
+
+    private fun initHolidayDecorator(context: Context, @Holiday.Type type: String?, halfDay: Boolean, editable: Boolean) {
+        val key = DecoratorKey(type, halfDay, editable)
+        holidayDecorators[key] = HolidayDecorator(context, key)
+    }
+
+    private data class DecoratorKey(
+            @Holiday.Type val type: String?,
+            val halfDay: Boolean,
+            val editable: Boolean
+    )
+
+    private class HolidayDecorator(context: Context, key: DecoratorKey) : DayViewDecorator {
 
         val days = mutableSetOf<CalendarDay>()
+        val drawable: Drawable
+
+        init {
+            val shapeDrawable = ShapeDrawable(if (key.halfDay) ArcShape(-90f, -180f) else OvalShape())
+            shapeDrawable.paint.color = holidayTypeColor(context, key.type)
+            shapeDrawable.paint.alpha = if (key.editable) 255 else 127
+            val inset = context.resources.getDimensionPixelSize(R.dimen.holiday_background_inset)
+            drawable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                InsetDrawable(RippleDrawable(ContextCompat.getColorStateList(context, R.color.holiday_indicator_ripple), shapeDrawable, shapeDrawable), inset)
+            } else {
+                InsetDrawable(shapeDrawable, inset)
+            }
+        }
 
         override fun shouldDecorate(day: CalendarDay): Boolean = days.contains(day)
 

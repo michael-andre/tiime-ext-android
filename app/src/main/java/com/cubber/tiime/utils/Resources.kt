@@ -6,6 +6,8 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.support.annotation.AttrRes
+import android.support.annotation.ColorInt
+import android.support.v4.content.ContextCompat
 import android.support.v7.content.res.AppCompatResources
 import com.cubber.tiime.R
 import com.cubber.tiime.model.Holiday
@@ -47,24 +49,44 @@ fun fileIcon(context: Context, uri: Uri?): Drawable? {
     if (uri == null || uri == Uri.EMPTY) return null
     val type = Uris.getMimeType(context, uri)
     return when {
-        type == "application/pdf" -> AppCompatResources.getDrawable(context, R.drawable.ic_file_pdf)
-        type == "application/msword" || type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" -> AppCompatResources.getDrawable(context, R.drawable.ic_file_document)
-        type == "application/vnd.ms-excel" || type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" -> AppCompatResources.getDrawable(context, R.drawable.ic_file_spreadsheet)
-        type?.startsWith("image/") ?: false -> AppCompatResources.getDrawable(context, R.drawable.ic_file_image)
-        else -> AppCompatResources.getDrawable(context, R.drawable.ic_file_generic)
+        type == "application/pdf" ->
+            AppCompatResources.getDrawable(context, R.drawable.ic_file_pdf)
+        type == "application/msword"
+                || type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ->
+            AppCompatResources.getDrawable(context, R.drawable.ic_file_document)
+        type == "application/vnd.ms-excel"
+                || type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ->
+            AppCompatResources.getDrawable(context, R.drawable.ic_file_spreadsheet)
+        type?.startsWith("image/") ?: false ->
+            AppCompatResources.getDrawable(context, R.drawable.ic_file_image)
+        else ->
+            AppCompatResources.getDrawable(context, R.drawable.ic_file_generic)
     }
 }
 
-fun holidayTypeBackground(context: Context, @Holiday.Type type: String?): Drawable? {
+fun holidayTypeLargeIndicator(context: Context, @Holiday.Type type: String?): Drawable? {
     return when (type) {
-        Holiday.TYPE_COMPENSATORY_TIME -> AppCompatResources.getDrawable(context, R.drawable.holiday_background_compensatory_time)
-        Holiday.TYPE_FAMILY_MATTERS -> AppCompatResources.getDrawable(context, R.drawable.holiday_background_family_matters)
-        Holiday.TYPE_PAID_VACATION -> AppCompatResources.getDrawable(context, R.drawable.holiday_background_paid_vacation)
-        Holiday.TYPE_SICK_LEAVE -> AppCompatResources.getDrawable(context, R.drawable.holiday_background_sick_leave)
-        Holiday.TYPE_UNPAID_HOLIDAY -> AppCompatResources.getDrawable(context, R.drawable.holiday_background_unpaid_holiday)
-        Holiday.TYPE_WORK_ACCIDENT -> AppCompatResources.getDrawable(context, R.drawable.holiday_background_work_accident)
+        Holiday.TYPE_COMPENSATORY_TIME -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_compensatory_time_large)
+        Holiday.TYPE_FAMILY_MATTERS -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_family_matters_large)
+        Holiday.TYPE_PAID_VACATION -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_paid_vacation_large)
+        Holiday.TYPE_SICK_LEAVE -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_sick_leave_large)
+        Holiday.TYPE_UNPAID_HOLIDAY -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_unpaid_holiday_large)
+        Holiday.TYPE_WORK_ACCIDENT -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_work_accident_large)
         else -> null
     }
+}
+
+@ColorInt
+fun holidayTypeColor(context: Context, @Holiday.Type type: String?): Int {
+    return ContextCompat.getColor(context, when (type) {
+        Holiday.TYPE_COMPENSATORY_TIME -> R.color.holiday_compensatory_time
+        Holiday.TYPE_FAMILY_MATTERS -> R.color.holiday_family_matters
+        Holiday.TYPE_PAID_VACATION -> R.color.holiday_paid_vacation
+        Holiday.TYPE_SICK_LEAVE -> R.color.holiday_sick_leave
+        Holiday.TYPE_UNPAID_HOLIDAY -> R.color.holiday_unpaid_holiday
+        Holiday.TYPE_WORK_ACCIDENT -> R.color.holiday_work_accident
+        else -> android.R.color.darker_gray
+    })
 }
 
 fun holidayTypeName(context: Context, @Holiday.Type type: String?): String? {
@@ -87,7 +109,7 @@ fun selectableItemBackgroundBorderless(context: Context): Drawable? {
     return background
 }
 
-fun resolveDrawableAttr(context: Context, @AttrRes attr: Int) : Drawable? {
+fun resolveDrawableAttr(context: Context, @AttrRes attr: Int): Drawable? {
     val attrs = intArrayOf(attr)
     val ta = context.obtainStyledAttributes(attrs)
     val drawable = ta.getDrawable(0)

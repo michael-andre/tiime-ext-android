@@ -29,7 +29,7 @@ object Wages {
         } else {
             val cal = Calendar.getInstance()
             cal.time = startDate
-            cal.add(Calendar.DAY_OF_MONTH, duration / 2)
+            cal.add(Calendar.DAY_OF_MONTH, duration / 2 - 1)
             (shortDateFormat().format(startDate)
                     + " → "
                     + shortDateFormat().format(cal.time))

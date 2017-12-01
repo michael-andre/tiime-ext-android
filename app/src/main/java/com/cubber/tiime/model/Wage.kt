@@ -11,7 +11,6 @@ import java.util.*
 data class Wage(
     var id: Long = 0,
     var period: Date? = null,
-    var grossSalary: BigDecimal? = null,
     var increase: BigDecimal? = null,
     @SalaryType var increaseType: String? = null,
     var bonus: BigDecimal? = null,

@@ -19,10 +19,6 @@
             name="holidaysSummary"
             type="java.util.Map&lt;String,Double>" />
 
-        <variable
-            name="displayYear"
-            type="boolean" />
-
     </data>
 
     <android.support.v7.widget.CardView
@@ -55,11 +51,12 @@
                     android:drawablePadding="@dimen/small_spacing"
                     android:drawableStart="@drawable/ic_validate_24dp"
                     android:text="@string/validate"
-                    app:visible="@{ !displayYear &amp;&amp; wage.editable &amp;&amp; !wage.validated }" />
+                    app:visible="@{ wage.editable &amp;&amp; !wage.validated }" />
+                    app:visible="@{ wage.editable &amp;&amp; !wage.validated }" />
 
             </android.support.v7.widget.Toolbar>
 
-            <com.prolificinteractive.materialcalendarview.MaterialCalendarView
+            <com.cubber.tiime.app.wages.WageCalendarView
                 android:id="@+id/calendar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -79,8 +76,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:paddingBottom="@dimen/spacing"
-                android:paddingTop="@dimen/spacing"
-                app:visible="@{ !displayYear }">
+                android:paddingTop="@dimen/spacing">
 
                 <ImageView
                     android:id="@+id/holidays_icon"
@@ -247,7 +243,7 @@
                 android:focusable="@{ wage.editable }"
                 android:paddingBottom="@dimen/spacing"
                 android:paddingTop="@dimen/spacing"
-                app:visible="@{ !displayYear &amp;&amp; (wage.increase != null || wage.bonus != null) }">
+                app:visible="@{ wage.increase != null || wage.bonus != null }">
 
                 <ImageView
                     android:id="@+id/increase_icon"
@@ -319,7 +315,7 @@
                 android:focusable="@{ wage.editable }"
                 android:paddingBottom="@dimen/spacing"
                 android:paddingTop="@dimen/spacing"
-                app:visible="@{ !displayYear &amp;&amp; wage.comment != null }">
+                app:visible="@{ wage.comment != null }">
 
                 <ImageView
                     android:id="@+id/comment_icon"

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.design.widget.BottomSheetDialog
 import android.support.design.widget.BottomSheetDialogFragment
+import android.support.v7.widget.GridLayoutManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -25,6 +26,7 @@ class WageHolidayFragment : BottomSheetDialogFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         binding = WageHolidayDialogBinding.inflate(inflater, container, false)
 
+        binding.type.layoutManager = GridLayoutManager(context, 3)
         binding.type.adapter = Adapter()
 
         val startDate = arguments!!.getSerializable(ARG_START_DATE) as Date

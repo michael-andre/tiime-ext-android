@@ -64,4 +64,5 @@
     <string name="bonus_label">Prime&#160;:</string>
     <string name="net">Net</string>
     <string name="gross">Brut</string>
+    <string name="select_end_date">Sélectionnez la date de fin.</string>
 </resources>

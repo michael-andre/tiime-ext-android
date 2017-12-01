@@ -10,7 +10,6 @@ import android.arch.paging.LivePagedListProvider
 import android.arch.paging.PagedList
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.support.transition.TransitionManager
 import android.support.v4.app.Fragment
 import android.support.v4.util.LongSparseArray
 import android.view.LayoutInflater
@@ -42,14 +41,6 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
         val adapter = WagesAdapter(context!!, model.expandedIds, this)
         binding.list.layoutManager = layoutManager
         binding.list.adapter = adapter
-        val parent = parentFragment as WagesFragment
-        parent.viewYearData.observe(this, Observer { viewYear ->
-            layoutManager.columnWidth = resources.getDimensionPixelSize(
-                    if (viewYear == true) R.dimen.handset_dual_card_width else R.dimen.handset_card_width
-            )
-            adapter.viewYear = viewYear == true
-            TransitionManager.beginDelayedTransition(binding.root.parent as ViewGroup)
-        })
 
         binding.refreshLayout.setOnRefreshListener {
             binding.refreshLayout.isRefreshing = true
@@ -67,10 +58,10 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
         return binding.root
     }
 
-    override fun onDateSelected(date: Date) {
+    override fun onDateSelected(date: Date, days: Int) {
         val targetWage = model.wages?.value?.firstEditable(date)
         if (targetWage != null) {
-            WageHolidayFragment.newInstance(targetWage.id, date, 2).show(childFragmentManager, "add_holiday")
+            WageHolidayFragment.newInstance(targetWage.id, date, days * 2).show(childFragmentManager, "add_holiday")
         } else {
             Snackbar.make(binding.root, R.string.invalid_holiday_date, Snackbar.LENGTH_LONG).show()
         }
