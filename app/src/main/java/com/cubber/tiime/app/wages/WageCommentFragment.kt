@@ -20,10 +20,16 @@ import com.cubber.tiime.model.Wage
  */
 class WageCommentFragment : BottomSheetDialogFragment() {
 
+    private val employeeId : Long
+        get() = arguments?.getLong(ARG_EMPLOYEE_ID) ?: throw IllegalArgumentException()
+    private val wageId : Long
+        get() = arguments?.getLong(ARG_WAGE_ID) ?: throw IllegalArgumentException()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         val model = ViewModelProviders.of(this).get(VM::class.java)
-        model.wageId = arguments?.getLong(ARG_WAGE_ID) ?: throw IllegalArgumentException()
+        model.employeeId = employeeId
+        model.wageId = wageId
 
         val binding = WageCommentDialogBinding.inflate(inflater, container, false)
         binding.toolbar.inflateMenu(R.menu.wage_comment)
@@ -47,19 +53,22 @@ class WageCommentFragment : BottomSheetDialogFragment() {
     class VM(app: Application) : AndroidViewModel(app) {
 
         var wageId : Long = 0
-        val wage: LiveData<Wage?> by lazy {
-            DataRepository.of(getApplication()).wage(wageId)
+        var employeeId : Long = 0
+        val wage: LiveData<Wage> by lazy {
+            DataRepository.of(getApplication()).wage(employeeId, wageId)
         }
 
     }
 
     companion object {
 
+        private const val ARG_EMPLOYEE_ID = "employee_id"
         private const val ARG_WAGE_ID = "wage_id"
 
-        fun newInstance(wageId: Long): WageCommentFragment {
+        fun newInstance(employeeId: Long, wageId: Long): WageCommentFragment {
             return WageCommentFragment().apply {
                 arguments = Bundle().apply {
+                    putLong(ARG_EMPLOYEE_ID, employeeId)
                     putLong(ARG_WAGE_ID, wageId)
                 }
             }

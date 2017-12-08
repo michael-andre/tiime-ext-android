@@ -87,7 +87,7 @@ class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filtera
                 if (query == null || query.isEmpty()) {
                     values.addAll(clients)
                 } else {
-                    values.addAll(clients.filterCleaned(query) { c -> arrayOf(c.name, c.address) })
+                    values.addAll(clients.filterCleaned(query) { c -> arrayOf(c.name, c.directionsAddress) })
                 }
             }
             results.count = values.size

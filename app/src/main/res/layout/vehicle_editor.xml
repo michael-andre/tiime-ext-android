@@ -42,6 +42,7 @@
             android:paddingTop="@dimen/large_spacing">
 
             <android.support.design.widget.TextInputLayout
+                android:id="@+id/name_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/vehicle_name">
@@ -50,6 +51,7 @@
                     android:id="@+id/name"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:enabled="@{ vehicle != null }"
                     android:inputType="text|textCapWords"
                     android:maxLines="1"
                     android:text="@={ vehicle.name }" />
@@ -75,6 +77,7 @@
                     items="@{ types }"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:enabled="@{ vehicle.id == 0 }"
                     android:minHeight="?dropdownListPreferredItemHeight"
                     android:onItemSelected="@{ typeListener }"
                     android:selectedItem="@={ vehicle.type }"
@@ -103,8 +106,9 @@
                     items="@{ powers }"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:enabled="@{ vehicle.id == 0 }"
                     android:minHeight="?dropdownListPreferredItemHeight"
-                    android:selectedItem="@={ vehicle.fiscal_power }"
+                    android:selectedItem="@={ vehicle.fiscalPower }"
                     tools:listitem="@android:layout/simple_spinner_item" />
 
             </LinearLayout>
@@ -115,8 +119,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing"
+                android:drawableLeft="@drawable/ic_certificate_24dp"
+                android:drawablePadding="@dimen/spacing"
+                android:drawableStart="@drawable/ic_certificate_24dp"
+                android:enabled="@{ vehicle != null }"
                 android:text="@string/add_vehicle_card"
-                app:visible="@{ vehicle.card_uri == null }" />
+                app:visible="@{ vehicle.card == null }" />
 
             <LinearLayout
                 style="?buttonStyle"
@@ -124,7 +132,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/spacing"
                 android:padding="0dp"
-                app:visible="@{ vehicle.card_uri != null }">
+                app:visible="@{ vehicle.card != null }">
 
                 <Button
                     android:id="@+id/vehicle_card"
@@ -132,7 +140,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:drawablePadding="@dimen/small_spacing"
-                    android:drawableStart="@{ res.fileIcon(context, vehicle.card_uri) }"
+                    android:drawableStart="@{ res.fileIcon(context, vehicle.card) }"
                     android:text="@string/vehicle_card"
                     android:textAppearance="?attr/textAppearanceListItemSmall"
                     tools:drawableStart="@drawable/ic_file_generic"

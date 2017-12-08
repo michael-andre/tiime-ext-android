@@ -16,9 +16,7 @@ import com.cubber.tiime.R
 
 object Intents {
 
-    val DOCUMENT_TYPES = arrayOf("image/jpeg", "image/pjpeg", "application/pdf")
-
-    fun getContent(allowedTypes: Array<String>?, chooserTitle: CharSequence?): Intent {
+    fun getContent(allowedTypes: Array<String>? = null, chooserTitle: CharSequence? = null): Intent {
         val intent = Intent(Intent.ACTION_GET_CONTENT)
         when {
             allowedTypes?.isEmpty() != false -> intent.type = "*/*"

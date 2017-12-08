@@ -35,18 +35,6 @@
 
             <TableRow>
 
-                <TextView android:text="@string/gross_salary_label" />
-
-                <TextView
-                    android:layout_span="2"
-                    android:text="@{ f.euroSafeFormat().format(wage.grossSalary) }"
-                    android:textAppearance="?android:textAppearanceMedium"
-                    tools:text="2 000 €" />
-
-            </TableRow>
-
-            <TableRow android:layout_marginTop="@dimen/spacing">
-
                 <TextView android:text="@string/increase_label" />
 
                 <com.wapplix.widget.NumberEditText

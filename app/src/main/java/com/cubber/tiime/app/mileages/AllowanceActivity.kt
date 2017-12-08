@@ -2,12 +2,14 @@ package com.cubber.tiime.app.mileages
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.Application
 import android.arch.lifecycle.*
 import android.arch.lifecycle.Observer
 import android.content.Context
 import android.content.Intent
 import android.databinding.DataBindingUtil
+import android.net.Uri
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
@@ -20,15 +22,13 @@ import com.cubber.tiime.R
 import com.cubber.tiime.app.mileages.vehicles.VehiclePickerFragment
 import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.databinding.AllowanceActivityBinding
+import com.cubber.tiime.model.Associate
 import com.cubber.tiime.model.Client
 import com.cubber.tiime.model.MileageAllowance
 import com.cubber.tiime.model.Vehicle
-import com.cubber.tiime.utils.ArchDialogs
-import com.cubber.tiime.utils.Views
-import com.cubber.tiime.utils.fullDateFormat
+import com.cubber.tiime.utils.*
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer
 import com.google.android.gms.location.places.Places
-import com.google.common.base.Optional
 import com.google.maps.DirectionsApi
 import com.google.maps.model.EncodedPolyline
 import com.google.maps.model.TravelMode
@@ -73,11 +73,11 @@ class AllowanceActivity : AppCompatActivity() {
         // Hints
         val hintsAdapter = AllowanceHintAdapter()
         b.hints.adapter = hintsAdapter
-        b.reason.addTextChangedListener(hintsAdapter.getQueryWatcher(b.reason))
-        b.reason.setOnFocusChangeListener { _, hasFocus ->
+        b.purpose.addTextChangedListener(hintsAdapter.getQueryWatcher(b.purpose))
+        b.purpose.setOnFocusChangeListener { _, hasFocus ->
             b.hints.visibility = if (hasFocus) View.VISIBLE else View.GONE
         }
-        b.reason.setOnEditorActionListener { textView, actionId, _ ->
+        b.purpose.setOnEditorActionListener { textView, actionId, _ ->
             when (actionId) {
                 EditorInfo.IME_ACTION_DONE, EditorInfo.IME_NULL -> {
                     if (TextUtils.isEmpty(b.distance.text)) {
@@ -91,7 +91,7 @@ class AllowanceActivity : AppCompatActivity() {
             }
         }
 
-        if (savedInstanceState == null) b.reason.requestFocus()
+        if (savedInstanceState == null) b.purpose.requestFocus()
         hintsAdapter.onClientHintClick = { client ->
             model.setClient(client)
             expandAddresses(b)
@@ -106,13 +106,14 @@ class AllowanceActivity : AppCompatActivity() {
                         model.setVehicle(vehicle)
                     }
                 })
+        b.addVehicleCard.setOnClickListener { showCardPicker() }
 
         // Distance
         b.expandTrip.setOnClickListener {
             expandAddresses(b)
             b.startingAddress.requestFocus()
         }
-        if (!TextUtils.isEmpty(model.allowance.from) || !TextUtils.isEmpty(model.allowance.to)) {
+        if (!TextUtils.isEmpty(model.allowance.fromAddress) || !TextUtils.isEmpty(model.allowance.toAddress)) {
             expandAddresses(b)
         }
 
@@ -155,8 +156,8 @@ class AllowanceActivity : AppCompatActivity() {
             Views.hideSoftInput(b.arrivalAddress)
         }
         model.locationPermissionCheck.handleOn(this, "location_permission")
-        model.officeAddress.observe(this, Observer { address ->
-            if (address != null) {
+        model.associate.observe(this, Observer { associate ->
+            associate?.defaultFromAddress?.let { address ->
                 startingAddressAdapter.setOfficeAddress(address)
                 arrivalAddressAdapter.setOfficeAddress(address)
             }
@@ -214,11 +215,32 @@ class AllowanceActivity : AppCompatActivity() {
 
         })
         model.vehicle.observe(this, Observer { b.vehicle = it })
+        model.vehicles.observe(this, Observer { b.noVehicle = it?.isEmpty() ?: false })
         model.clients.observe(this, Observer { clients ->
             hintsAdapter.setClients(clients)
             startingAddressAdapter.setClients(clients)
             arrivalAddressAdapter.setClients(clients)
         })
+        model.cardProcessing.observe(this, Observer { b.cardProcessing = it ?: false })
+        model.errorEvent.observe(this, Observer { e ->
+            when (e) {
+                is UnsupportedFileTypeException -> {
+                    Snackbar.make(b.root, R.string.unsupported_type_error, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.add_vehicle_card) { showCardPicker() }
+                            .show()
+                }
+                else -> {
+                    Snackbar.make(b.root, R.string.generic_error_message, Snackbar.LENGTH_LONG).show()
+                }
+            }
+        })
+    }
+
+    private fun showCardPicker() {
+        startActivityForResult(
+                Intents.getContent(Uris.SUPPORTED_TYPES, getString(R.string.add_vehicle_card)),
+                REQUEST_ADD_VEHICLE_CARD
+        )
     }
 
     private fun expandAddresses(b: AllowanceActivityBinding) {
@@ -245,6 +267,15 @@ class AllowanceActivity : AppCompatActivity() {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when (requestCode) {
+            REQUEST_ADD_VEHICLE_CARD -> if (resultCode == Activity.RESULT_OK && data != null) {
+                model.addVehicleCard(data.data)
+            }
+            else -> super.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
     override fun onSupportNavigateUp(): Boolean {
         finish()
         return true
@@ -252,19 +283,23 @@ class AllowanceActivity : AppCompatActivity() {
 
     class VM(application: Application) : AndroidViewModel(application) {
 
-        val allowanceData = MutableLiveData<MileageAllowance>()
-        val allowance: MileageAllowance get() = allowanceData.value!!
+        private val repository = DataRepository.of(application)
 
-        val vehicle = allowanceData.switchMap {
-            if (it.vehicleId != 0L) {
-                DataRepository.of(application).vehicle(it.vehicleId)
-            } else {
-                SimpleData(Optional.absent())
+        val allowanceData = MutableLiveData<MileageAllowance>()
+        val allowance get() = checkNotNull(allowanceData.value)
+
+        val associate = repository.associate()
+
+        val vehicles = repository.vehicles().toLiveData()
+        val vehicle = MediatorLiveData<Vehicle>().apply {
+            val select = {
+                vehicles.value?.let { value = it.firstOrNull { it.id == allowance.vehicleId } }
             }
+            addSource(allowanceData) { select() }
+            addSource(vehicles) { select() }
         }
 
-        val clients = DataRepository.of(getApplication()).clients()
-        val officeAddress = DataRepository.of(getApplication()).officeAddress()
+        val clients = repository.clients()
 
         val locationPermissionCheck = PermissionCheck(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION)
         private val currentPlace: LiveData<PlaceLikelihoodBuffer> = locationPermissionCheck.allGranted().switchMap { granted ->
@@ -277,17 +312,17 @@ class AllowanceActivity : AppCompatActivity() {
             else
                 null
         }
-        val startingCurrentPlaceTrigger = EventData<Any>()
-        val arrivalCurrentPlaceTrigger = EventData<Any>()
+        val startingCurrentPlaceTrigger = SingleLiveEvent<Any>()
+        val arrivalCurrentPlaceTrigger = SingleLiveEvent<Any>()
         val startingCurrentPlace = startingCurrentPlaceTrigger.switchMap { currentPlace }
         val arrivalCurrentPlace = arrivalCurrentPlaceTrigger.switchMap { currentPlace }
-        val directionsTrigger = EventData<Any>()
+        val directionsTrigger = SingleLiveEvent<Any>()
         val directionsLoading = MutableLiveData<Boolean>()
         val directions = directionsTrigger.cancellingSwitchMap {
             val exp = allowanceData.value
-            if (exp != null && !TextUtils.isEmpty(exp.from) && !TextUtils.isEmpty(exp.to)) {
+            if (exp != null && !TextUtils.isEmpty(exp.fromAddress) && !TextUtils.isEmpty(exp.toAddress)) {
                 directionsLoading.postValue(true)
-                DirectionsApi.getDirections(GeoUtils.getGeoApiContext(application), exp.from, exp.to)
+                DirectionsApi.getDirections(GeoUtils.getGeoApiContext(application), exp.fromAddress, exp.toAddress)
                         .mode(TravelMode.DRIVING)
                         .alternatives(false)
                         .toData()
@@ -296,15 +331,17 @@ class AllowanceActivity : AppCompatActivity() {
             }
         }
 
+        val errorEvent = SingleLiveEvent<Throwable>()
+        var cardProcessing = ProgressData<Vehicle>()
+
         init {
             val exp = MileageAllowance()
             exp.dates = TreeSet(setOf(Date()))
             allowanceData.value = exp
-            val defaultVehicleId = DataRepository.of(getApplication()).defaultVehicleId()
-            defaultVehicleId.observeForever(object : Observer<Optional<Long>> {
-                override fun onChanged(t: Optional<Long>?) {
-                    exp.vehicleId = t!!.or(0L)
-                    defaultVehicleId.removeObserver(this)
+            associate.observeForever(object : Observer<Associate> {
+                override fun onChanged(a: Associate?) {
+                    exp.vehicleId = a?.defaultVehicleId ?: 0L
+                    associate.removeObserver(this)
                 }
             })
         }
@@ -315,8 +352,8 @@ class AllowanceActivity : AppCompatActivity() {
 
         fun setClient(client: Client) {
             allowanceData.update {
-                reason = client.name
-                to = client.address
+                purpose = client.name
+                toAddress = client.directionsAddress
             }
         }
 
@@ -354,9 +391,26 @@ class AllowanceActivity : AppCompatActivity() {
             b?.release()
         }
 
+        internal fun addVehicleCard(uri: Uri) {
+            if (Uris.checkSupportedType(getApplication(), uri) == false) {
+                errorEvent.trigger(UnsupportedFileTypeException())
+                return
+            }
+            vehicle.value?.let { v ->
+                repository.saveVehicle(v.copy(card = uri))
+                        .compose(cardProcessing)
+                        .subscribe(
+                                { },
+                                { e -> errorEvent.trigger(e) }
+                        )
+            }
+        }
+
     }
 
     companion object {
+
+        private const val REQUEST_ADD_VEHICLE_CARD = 1
 
         fun newIntent(context: Context): Intent {
             return Intent(context, AllowanceActivity::class.java)

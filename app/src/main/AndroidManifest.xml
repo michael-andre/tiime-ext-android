@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <application
+        android:name=".app.TiimeApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -20,12 +21,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".app.mileages.AllowanceActivity"
-            android:theme="@style/AppTheme.DialogWhenLarge"/>
+
+        <activity
+            android:name=".app.mileages.AllowanceActivity"
+            android:theme="@style/AppTheme.DialogWhenLarge" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyBjJXiBLBtDPGS9t2mKCOYjqBL3fzuv9Gs"/>
+            android:value="AIzaSyBjJXiBLBtDPGS9t2mKCOYjqBL3fzuv9Gs" />
 
     </application>
 

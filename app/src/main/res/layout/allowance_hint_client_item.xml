@@ -54,7 +54,7 @@
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:singleLine="true"
-            android:text="@{ client.address }"
+            android:text="@{ client.directionsAddress }"
             android:textAppearance="?android:textAppearanceSmall"
             android:textColor="?android:textColorSecondary"
             app:layout_constraintBottom_toBottomOf="parent"

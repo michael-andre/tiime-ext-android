@@ -22,7 +22,7 @@ class PermissionCheck(
 ) : LiveData<IntArray>() {
 
     private val context: Context = context.applicationContext
-    private val requestSignal = EventData<Any>()
+    private val requestSignal = SingleLiveEvent<Any>()
 
     fun handleOn(activity: FragmentActivity, tag: String) {
         handleOn(activity, activity.supportFragmentManager, tag)

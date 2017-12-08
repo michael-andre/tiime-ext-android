@@ -65,4 +65,11 @@
     <string name="net">Net</string>
     <string name="gross">Brut</string>
     <string name="select_end_date">Sélectionnez la date de fin.</string>
+    <string name="edit">Modifier</string>
+    <string name="edit_vehicle">Modifier le véhicule</string>
+    <string name="required">Requis</string>
+    <string name="generic_error_message">Une erreur s’est produite.</string>
+    <string name="unsupported_type_error">Ce type de fichier n’est pas pris en charge.</string>
+    <string name="delete_vehicle_prompt">Supprimer le véhicule&#160;?</string>
+    <string name="delete_vehicle_message">Vous ne pourrez plus l’utiliser pour déclarer vos trajets.</string>
 </resources>

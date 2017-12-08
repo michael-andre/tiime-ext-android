@@ -2,7 +2,7 @@
 
 buildscript {
     ext.kotlinVersion = '1.2.0'
-    ext.androidPluginVersion = '3.1.0-alpha04'
+    ext.androidPluginVersion = '3.1.0-alpha05'
     repositories {
         google()
         jcenter()

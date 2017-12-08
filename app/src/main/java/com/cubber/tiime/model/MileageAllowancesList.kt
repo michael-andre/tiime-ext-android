@@ -7,8 +7,8 @@ import java.math.BigDecimal
  */
 
 data class MileageAllowancesList(
-    var allowances: List<MileageAllowance>? = null,
-    var annualCounts: Map<Int, AnnualCount>? = null
+        var mileages: List<MileageAllowance>? = null,
+        var annualCounts: Map<Int, AnnualCount>? = null
 ) {
 
     data class AnnualCount(

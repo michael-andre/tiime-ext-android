@@ -6,7 +6,7 @@ abstract class ListAdapter<T, VH : RecyclerView.ViewHolder> : RecyclerView.Adapt
 
     var items: List<T>? = null
         set(items) {
-            val changed = items != field
+            val changed = items != field || true
             field = items
             if (changed) notifyDataSetChanged()
         }

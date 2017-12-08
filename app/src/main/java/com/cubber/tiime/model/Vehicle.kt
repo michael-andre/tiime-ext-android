@@ -1,18 +1,21 @@
 package com.cubber.tiime.model
 
 import android.net.Uri
+import android.os.Parcelable
 import android.support.annotation.StringDef
+import kotlinx.android.parcel.Parcelize
 
 /**
  * Created by mike on 25/09/17.
  */
+@Parcelize
 data class Vehicle(
-    var id: Long = 0,
-    var name: String? = null,
-    @Type var type: String? = null,
-    @FiscalPower var fiscal_power: String? = null,
-    var card_uri: Uri? = null
-) {
+        var id: Long = 0,
+        var name: String? = null,
+        @Type var type: String? = null,
+        @FiscalPower var fiscalPower: String? = null,
+        var card: Uri? = null
+) : Parcelable {
 
     @Retention(AnnotationRetention.SOURCE)
     @StringDef(TYPE_CAR, TYPE_TWO_WHEELER_1, TYPE_TWO_WHEELER_2)

@@ -8,13 +8,14 @@ import java.util.*
  */
 
 data class MileageAllowance(
-    var id: Long = 0,
-    var vehicleId: Long = 0,
-    var from: String? = null,
-    var to: String? = null,
-    var reason: String? = null,
-    var distance: Int? = null,
-    var dates: Set<Date>? = null,
-    var comment: String? = null,
-    var polyline: EncodedPolyline? = null
+        var id: Long = 0,
+        var vehicleId: Long = 0,
+        var fromAddress: String? = null,
+        var toAddress: String? = null,
+        var purpose: String? = null,
+        var distance: Int? = null,
+        var dates: Set<Date>? = null,
+        var comment: String? = null,
+        var roundTrip: Boolean? = null,
+        var polyline: EncodedPolyline? = null
 )

@@ -1,14 +1,19 @@
 package com.cubber.tiime.app.mileages.vehicles
 
 import com.cubber.tiime.model.Vehicle
-
-import java.util.Arrays
+import java.util.*
 
 /**
  * Created by mike on 11/10/17.
  */
 
 object Vehicles {
+
+    fun getVehicleTypes() = listOf(
+            Vehicle.TYPE_CAR,
+            Vehicle.TYPE_TWO_WHEELER_1,
+            Vehicle.TYPE_TWO_WHEELER_2
+    )
 
     fun getAvailablePowers(@Vehicle.Type type: String): List<String>? {
         when (type) {

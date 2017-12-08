@@ -32,6 +32,9 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
     private lateinit var binding: EmployeeWagesFragmentBinding
     private lateinit var layoutManager: AutoGridLayoutManager
 
+    private val employeeId: Long
+        get() = arguments!!.getLong(ARG_EMPLOYEE_ID)
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         binding = EmployeeWagesFragmentBinding.inflate(inflater, container, false)
@@ -47,7 +50,6 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
             model.currentSource?.invalidate()
         }
 
-        val employeeId = arguments!!.getLong(ARG_EMPLOYEE_ID)
         model.init(employeeId)
 
         model.wages?.observe(this, Observer<PagedList<Wage>> {
@@ -68,11 +70,11 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
     }
 
     override fun onEditComment(item: Wage) {
-        WageCommentFragment.newInstance(item.id).show(childFragmentManager, "edit_comment")
+        WageCommentFragment.newInstance(employeeId, item.id).show(childFragmentManager, "edit_comment")
     }
 
     override fun onEditIncreaseBonus(item: Wage) {
-        WageIncreaseBonusFragment.newInstance(item.id).show(childFragmentManager, "edit_increase_bonus")
+        WageIncreaseBonusFragment.newInstance(employeeId, item.id).show(childFragmentManager, "edit_increase_bonus")
     }
 
     class VM(application: Application) : AndroidViewModel(application) {

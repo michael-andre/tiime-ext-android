@@ -18,8 +18,7 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.places.AutocompleteFilter
 import com.google.android.gms.location.places.PlaceLikelihoodBuffer
 import com.google.android.gms.location.places.Places
-import com.google.common.base.Optional
-import com.wapplix.arch.EventData
+import com.wapplix.arch.SingleLiveEvent
 import com.wapplix.arch.cancellingSwitchMap
 import com.wapplix.arch.switchMap
 import com.wapplix.gms.toData
@@ -48,12 +47,14 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
                 .build()
         client.switchMap { c ->
             mQuery.cancellingSwitchMap { query -> Places.GeoDataApi.getAutocompletePredictions(c, query, null, autocompleteFilter).toData() }
-        }.observe(lifecycleOwner, Observer{ buffer ->
+        }.observe(lifecycleOwner, Observer { buffer ->
             if (buffer?.status?.isSuccess == true) {
-                autocompletePredictions = buffer.map { Item(
-                        address = it.getFullText(null).toString(),
-                        placeId = it.placeId
-                ) }
+                autocompletePredictions = buffer.map {
+                    Item(
+                            address = it.getFullText(null).toString(),
+                            placeId = it.placeId
+                    )
+                }
                 filter.notifySourceDataChanged()
             }
             buffer?.release()
@@ -77,7 +78,7 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
         return filter
     }
 
-    fun getItemListener(currentPlaceTrigger: EventData<*>): AdapterView.OnItemClickListener {
+    fun getItemListener(currentPlaceTrigger: SingleLiveEvent<*>): AdapterView.OnItemClickListener {
         return AdapterView.OnItemClickListener { adapterView, _, position, _ ->
             if (adapterView.adapter == this@LocationHintsAdapter && currentLocation === getItem(position)) {
                 currentPlaceTrigger.trigger()
@@ -86,29 +87,31 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
     }
 
     fun setClients(clients: List<Client>?) {
-        this.clients = clients?.map { Item(
-                address = it.name + ", " + it.address
-        )}
+        this.clients = clients?.map {
+            Item(
+                    address = it.name + ", " + it.directionsAddress
+            )
+        }
         filter.notifySourceDataChanged()
     }
 
     fun setCurrentPlaces(places: PlaceLikelihoodBuffer?) {
-        currentPlaces = places?.map { Item(
-                address = if (it.place.address.startsWith(it.place.name)) {
-                    it.place.address.toString()
-                } else {
-                    it.place.name.toString() + ", " + it.place.address
-                },
-                placeId = it.place.id
-        ) }
+        currentPlaces = places?.map {
+            Item(
+                    address = if (it.place.address.startsWith(it.place.name)) {
+                        it.place.address.toString()
+                    } else {
+                        it.place.name.toString() + ", " + it.place.address
+                    },
+                    placeId = it.place.id
+            )
+        }
         places?.release()
         filter.notifySourceDataChanged()
     }
 
-    fun setOfficeAddress(officeAddress: Optional<String>) {
-        this.officeAddress = if (officeAddress.isPresent) Item(
-                address = officeAddress.get()
-        ) else null
+    fun setOfficeAddress(address: String?) {
+        this.officeAddress = if (address != null) Item(address) else null
         filter.notifySourceDataChanged()
     }
 
@@ -158,7 +161,7 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
 
         override fun publishResults(charSequence: CharSequence?, filterResults: Filter.FilterResults?) {
             @Suppress("unchecked_cast")
-            items =  filterResults?.values as List<Item>?
+            items = filterResults?.values as List<Item>?
         }
 
         override fun convertResultToString(item: Any): CharSequence? {

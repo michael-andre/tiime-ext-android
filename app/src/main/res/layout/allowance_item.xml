@@ -45,7 +45,7 @@
                 app:layout_constraintEnd_toEndOf="@id/map" />
 
             <TextView
-                android:id="@+id/reason"
+                android:id="@+id/purpose"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="?listPreferredItemPaddingLeft"
@@ -53,7 +53,7 @@
                 android:layout_marginTop="@dimen/spacing"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="@{ allowance.reason }"
+                android:text="@{ allowance.purpose }"
                 android:textAppearance="?textAppearanceListItem"
                 app:layout_constraintEnd_toStartOf="@id/distance"
                 app:layout_constraintStart_toStartOf="parent"
@@ -70,9 +70,9 @@
                 android:text="@{ f.fullDateFormat.format(allowance.dates.iterator().next()) }"
                 android:textAppearance="?android:textAppearanceSmall"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="@id/reason"
-                app:layout_constraintStart_toStartOf="@id/reason"
-                app:layout_constraintTop_toBottomOf="@+id/reason"
+                app:layout_constraintEnd_toEndOf="@id/purpose"
+                app:layout_constraintStart_toStartOf="@id/purpose"
+                app:layout_constraintTop_toBottomOf="@+id/purpose"
                 tools:text="12 septembre 2017" />
 
             <TextView
@@ -85,7 +85,7 @@
                 android:textAppearance="?textAppearanceListItem"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/reason"
+                app:layout_constraintStart_toEndOf="@id/purpose"
                 app:layout_constraintTop_toBottomOf="@id/map"
                 tools:text="120 km" />
 

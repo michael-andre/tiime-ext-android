@@ -111,7 +111,7 @@ if $cygwin ; then
     CLASSPATH=`cygpath --path --mixed "$CLASSPATH"`
     JAVACMD=`cygpath --unix "$JAVACMD"`
 
-    # We build the pattern for arguments to be converted via cygpath
+    # We build the pattern for withArguments to be converted via cygpath
     ROOTDIRSRAW=`find -L / -maxdepth 1 -mindepth 1 -type d 2>/dev/null`
     SEP=""
     for dir in $ROOTDIRSRAW ; do
@@ -119,20 +119,20 @@ if $cygwin ; then
         SEP="|"
     done
     OURCYGPATTERN="(^($ROOTDIRS))"
-    # Add a user-defined pattern to the cygpath arguments
+    # Add a user-defined pattern to the cygpath withArguments
     if [ "$GRADLE_CYGPATTERN" != "" ] ; then
         OURCYGPATTERN="$OURCYGPATTERN|($GRADLE_CYGPATTERN)"
     fi
-    # Now convert the arguments - kludge to limit ourselves to /bin/sh
+    # Now convert the withArguments - kludge to limit ourselves to /bin/sh
     i=0
     for arg in "$@" ; do
         CHECK=`echo "$arg"|egrep -c "$OURCYGPATTERN" -`
         CHECK2=`echo "$arg"|egrep -c "^-"`                                 ### Determine if an option
 
         if [ $CHECK -ne 0 ] && [ $CHECK2 -eq 0 ] ; then                    ### Added a condition
-            eval `echo args$i`=`cygpath --path --ignore --mixed "$arg"`
+            eval `echo withArguments$i`=`cygpath --path --ignore --mixed "$arg"`
         else
-            eval `echo args$i`="\"$arg\""
+            eval `echo withArguments$i`="\"$arg\""
         fi
         i=$((i+1))
     done
