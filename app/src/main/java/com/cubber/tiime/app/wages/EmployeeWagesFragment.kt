@@ -1,10 +1,7 @@
 package com.cubber.tiime.app.wages
 
 import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
 import android.arch.paging.DataSource
 import android.arch.paging.LivePagedListProvider
 import android.arch.paging.PagedList
@@ -16,10 +13,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.cubber.tiime.R
+import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.data.WagesSource
 import com.cubber.tiime.databinding.EmployeeWagesFragmentBinding
+import com.cubber.tiime.model.Holiday
 import com.cubber.tiime.model.Wage
+import com.cubber.tiime.utils.Intents
+import com.cubber.tiime.utils.showErrorSnackbar
+import com.wapplix.arch.UiModel
+import com.wapplix.arch.getUiModel
+import com.wapplix.arch.observe
+import com.wapplix.arch.show
 import com.wapplix.recycler.AutoGridLayoutManager
+import com.wapplix.showSnackbar
 import java.util.*
 
 /**
@@ -28,7 +34,7 @@ import java.util.*
 
 class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
 
-    private lateinit var model: VM
+    private lateinit var vm: VM
     private lateinit var binding: EmployeeWagesFragmentBinding
     private lateinit var layoutManager: AutoGridLayoutManager
 
@@ -38,35 +44,41 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
 
         binding = EmployeeWagesFragmentBinding.inflate(inflater, container, false)
-        model = ViewModelProviders.of(this).get(VM::class.java)
+        vm = getUiModel()
 
         layoutManager = AutoGridLayoutManager(context!!, resources.getDimensionPixelSize(R.dimen.handset_card_width))
-        val adapter = WagesAdapter(context!!, model.expandedIds, this)
+        val adapter = WagesAdapter(context!!, vm.expandedIds, this)
         binding.list.layoutManager = layoutManager
         binding.list.adapter = adapter
 
         binding.refreshLayout.setOnRefreshListener {
             binding.refreshLayout.isRefreshing = true
-            model.currentSource?.invalidate()
+            DataRepository.of(context!!).wagesUpdate.onNext(emptyList())
         }
 
-        model.init(employeeId)
+        vm.init(employeeId)
 
-        model.wages?.observe(this, Observer<PagedList<Wage>> {
+        observe(vm.wages) {
             binding.wages = it
             binding.refreshLayout.isRefreshing = false
-        })
+        }
 
         return binding.root
     }
 
     override fun onDateSelected(date: Date, days: Int) {
-        val targetWage = model.wages?.value?.firstEditable(date)
-        if (targetWage != null) {
-            WageHolidayFragment.newInstance(targetWage.id, date, days * 2).show(childFragmentManager, "add_holiday")
-        } else {
-            Snackbar.make(binding.root, R.string.invalid_holiday_date, Snackbar.LENGTH_LONG).show()
+        val existing = Wages.findHoliday(vm.wages.value!!, date)
+        if (existing != null) {
+            HolidayInfoFragment.newInstance(existing.second, Wages.isEditable(existing.first))
+                    .show(childFragmentManager, "details")
+            return
         }
+        val targetWage = Wages.getWageForHoliday(vm.wages.value!!, date)
+        if (targetWage == null) {
+            showSnackbar(R.string.holiday_date_locked, Snackbar.LENGTH_LONG)
+            return
+        }
+        vm.addHoliday(targetWage, date, days * 2)
     }
 
     override fun onEditComment(item: Wage) {
@@ -77,24 +89,57 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
         WageIncreaseBonusFragment.newInstance(employeeId, item.id).show(childFragmentManager, "edit_increase_bonus")
     }
 
-    class VM(application: Application) : AndroidViewModel(application) {
+    override fun onViewAttachment(item: Wage) {
+        Intents.startViewActivity(context!!, item.attachment!!)
+    }
 
-        var wages: LiveData<PagedList<Wage>>? = null
+    class VM(application: Application) : UiModel<EmployeeWagesFragment>(application) {
+
+        private val dataRepository = DataRepository.of(getApplication())
+
+        private var employeeId: Long = 0
+        lateinit var wages: LiveData<PagedList<Wage>>
         var expandedIds = LongSparseArray<Boolean>()
-        var currentSource: WagesSource? = null
 
         fun init(employeeId: Long) {
-            if (wages == null) {
+            this.employeeId = employeeId
+            if (!this@VM::wages.isInitialized) {
                 wages = object : LivePagedListProvider<Date, Wage>() {
 
                     override fun createDataSource(): DataSource<Date, Wage> {
-                        val source = WagesSource(getApplication(), employeeId)
-                        currentSource = source
-                        return source
+                        return WagesSource(getApplication(), employeeId)
                     }
 
-                }.create(null, 6)
+                }.create(null, PagedList.Config.Builder()
+                        .setPageSize(6)
+                        .setEnablePlaceholders(false)
+                        .build()
+                )
             }
+        }
+
+        fun addHoliday(wage: Wage, startDate: Date, duration: Int) {
+            onUi {
+                HolidayTypePickerFragment.newInstance(startDate, duration, wage.period!!)
+                        .show(childFragmentManager, "add_holiday") { type ->
+                            if (type == null) return@show
+                            val holiday = Holiday(startDate = startDate, duration = duration, type = type)
+                            dataRepository.addEmployeeWagesHoliday(employeeId, wage.id, holiday)
+                                    .subscribe(
+                                            {},
+                                            { e -> onUi { showErrorSnackbar(e) } }
+                                    )
+                        }
+            }
+
+        }
+
+        fun deleteHoliday(wageId: Long, holidayId: Long) {
+            dataRepository.deleteEmployeeWageHoliday(employeeId, wageId, holidayId)
+                    .subscribe(
+                            {},
+                            { e -> onUi { showErrorSnackbar(e) } }
+                    )
         }
 
     }

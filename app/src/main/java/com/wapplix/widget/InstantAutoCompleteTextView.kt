@@ -26,7 +26,6 @@ class InstantAutoCompleteTextView @JvmOverloads constructor(
     override fun onFocusChanged(focused: Boolean, direction: Int, previouslyFocusedRect: Rect?) {
         super.onFocusChanged(focused, direction, previouslyFocusedRect)
         if (focused) {
-            showDropDown()
             performFiltering(text, 0)
         }
     }

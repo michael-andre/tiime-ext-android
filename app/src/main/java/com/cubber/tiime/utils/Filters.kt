@@ -26,12 +26,14 @@ object Filters {
 
 }
 
-inline fun <T> Iterable<T>.filterCleaned(query: CharSequence, mapper: (T) -> Array<String?>) : List<T> {
+inline fun <T> Sequence<T>.filterCleaned(query: CharSequence, crossinline mapper: (T) -> Sequence<String?>) : Sequence<T> {
     val cleanQuery = Filters.clean(query)
-    if (cleanQuery?.isEmpty() != false) return emptyList()
+    if (cleanQuery?.isEmpty() != false) return emptySequence()
     return this.filter {
-        mapper(it)
-                .map { Filters.clean(it) }
-                .any { s -> s?.contains(cleanQuery) ?: false }
+        mapper(it).any { s -> Filters.clean(s)?.contains(cleanQuery) ?: false }
     }
+}
+
+inline fun <T> Iterable<T>.filterCleaned(query: CharSequence, crossinline mapper: (T) -> Sequence<String?>) : Sequence<T> {
+    return asSequence().filterCleaned(query, mapper)
 }

@@ -4,12 +4,12 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
-import android.arch.lifecycle.*
+import android.arch.lifecycle.MediatorLiveData
+import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.Observer
 import android.content.Context
 import android.content.Intent
-import android.databinding.DataBindingUtil
-import android.net.Uri
+import android.databinding.OnRebindCallback
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
@@ -27,16 +27,15 @@ import com.cubber.tiime.model.Client
 import com.cubber.tiime.model.MileageAllowance
 import com.cubber.tiime.model.Vehicle
 import com.cubber.tiime.utils.*
-import com.google.android.gms.location.places.PlaceLikelihoodBuffer
 import com.google.android.gms.location.places.Places
+import com.google.android.gms.maps.model.LatLng
 import com.google.maps.DirectionsApi
-import com.google.maps.model.EncodedPolyline
+import com.google.maps.DirectionsApiRequest
 import com.google.maps.model.TravelMode
 import com.wapplix.arch.*
-import com.wapplix.gms.GoogleApiClientData
-import com.wapplix.gms.toData
+import com.wapplix.binding.setContentViewBinding
 import com.wapplix.maps.GeoUtils
-import com.wapplix.maps.toData
+import com.wapplix.showSnackbar
 import java.util.*
 import kotlin.collections.HashSet
 
@@ -45,24 +44,29 @@ import kotlin.collections.HashSet
  */
 class AllowanceActivity : AppCompatActivity() {
 
-    private lateinit var model: VM
+    private lateinit var vm: VM
+    private lateinit var binding: AllowanceActivityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        model = ViewModelProviders.of(this).get(VM::class.java)
+        vm = getUiModel()
 
-        val b = DataBindingUtil.setContentView<AllowanceActivityBinding>(this, R.layout.allowance_activity)
-        b.addOnRebindCallback(object : AllowanceBindingCallback<AllowanceActivityBinding>() {
+        binding = setContentViewBinding(R.layout.allowance_activity)
+        binding.addOnRebindCallback(object : OnRebindCallback<AllowanceActivityBinding>() {
 
-            override fun onBound(binding: AllowanceActivityBinding?) {
-                setPolyline(b.map, b.allowance?.polyline)
+            private var mapHelper = PolylineMapHelper(binding.map)
+            private var mapOptionsFactory = PolylineMapOptionsFactory(this@AllowanceActivity)
+
+            override fun onBound(binding: AllowanceActivityBinding) {
+                val polyline = binding.allowance?.polyline
+                mapHelper.applyOptions(if (polyline != null) mapOptionsFactory.create(polyline) else null)
             }
 
         })
 
         // Action bar
-        setSupportActionBar(b.toolbar)
+        setSupportActionBar(binding.toolbar)
         with(supportActionBar!!) {
             setDisplayShowHomeEnabled(true)
             setDisplayHomeAsUpEnabled(true)
@@ -70,210 +74,187 @@ class AllowanceActivity : AppCompatActivity() {
             setHomeAsUpIndicator(R.drawable.ic_close_24dp)
         }
 
-        // Hints
+        // Purpose/client hints
         val hintsAdapter = AllowanceHintAdapter()
-        b.hints.adapter = hintsAdapter
-        b.purpose.addTextChangedListener(hintsAdapter.getQueryWatcher(b.purpose))
-        b.purpose.setOnFocusChangeListener { _, hasFocus ->
-            b.hints.visibility = if (hasFocus) View.VISIBLE else View.GONE
-        }
-        b.purpose.setOnEditorActionListener { textView, actionId, _ ->
+        binding.hints.adapter = hintsAdapter
+        binding.purpose.addTextChangedListener(afterTextChanged = {
+            hintsAdapter.filter.filter(binding.purpose.text)
+            if (binding.purpose.hasFocus()) vm.purposeHintsShown.value = true
+        })
+        binding.purpose.setOnFocusChangeListener { _, hasFocus -> if (!hasFocus) vm.purposeHintsShown.value = false }
+        vm.purposeHintsShown.observe(this, Observer { editing ->
+            binding.hints.visibility = if (editing == true) View.VISIBLE else View.GONE
+        })
+        binding.purpose.setOnEditorActionListener { _, actionId, _ ->
             when (actionId) {
                 EditorInfo.IME_ACTION_DONE, EditorInfo.IME_NULL -> {
-                    if (TextUtils.isEmpty(b.distance.text)) {
-                        b.distance.requestFocus()
-                    } else {
-                        Views.hideSoftInput(textView)
+                    vm.purposeHintsShown.value = false
+                    if (TextUtils.isEmpty(binding.distance.text)) {
+                        binding.distance.requestFocus()
                     }
                     true
                 }
                 else -> false
             }
         }
-
-        if (savedInstanceState == null) b.purpose.requestFocus()
+        if (savedInstanceState == null) {
+            binding.purpose.requestFocus()
+            vm.purposeHintsShown.value = true
+        }
         hintsAdapter.onClientHintClick = { client ->
-            model.setClient(client)
-            expandAddresses(b)
-            b.startingAddress.requestFocus()
+            vm.setClient(client)
+            expandAddresses(binding)
+            vm.purposeHintsShown.value = false
+            binding.fromAddress.requestFocus()
         }
 
         // Vehicle
-        b.vehicleLayout.setOnClickListener { VehiclePickerFragment().showForResult(this, "vehicle_picker") }
-        ArchDialogs.resultOf(VehiclePickerFragment::class.java, "vehicle_picker", this)
-                .observe(this, Observer { vehicle ->
-                    if (vehicle != null) {
-                        model.setVehicle(vehicle)
-                    }
-                })
-        b.addVehicleCard.setOnClickListener { showCardPicker() }
+        binding.vehicleLayout.setOnClickListener { vm.showVehiclePicker() }
+        binding.addVehicleCard.setOnClickListener { vm.showVehicleCardPicker() }
 
         // Distance
-        b.expandTrip.setOnClickListener {
-            expandAddresses(b)
-            b.startingAddress.requestFocus()
+        binding.expandTrip.setOnClickListener {
+            expandAddresses(binding)
+            binding.fromAddress.requestFocus()
         }
-        if (!TextUtils.isEmpty(model.allowance.fromAddress) || !TextUtils.isEmpty(model.allowance.toAddress)) {
-            expandAddresses(b)
+        if (!TextUtils.isEmpty(vm.allowance.fromAddress) || !TextUtils.isEmpty(vm.allowance.toAddress)) {
+            expandAddresses(binding)
         }
 
         // Addresses
-        val googleApiClient = GoogleApiClientData(this) { addApi(Places.GEO_DATA_API) }
-        val startingAddressAdapter = LocationHintsAdapter(googleApiClient, this)
-        b.startingAddress.setAdapter(startingAddressAdapter)
-        b.startingAddress.onItemClickListener = startingAddressAdapter.getItemListener(model.startingCurrentPlaceTrigger)
-        model.startingCurrentPlace.observe(this, Observer { places ->
-            startingAddressAdapter.setCurrentPlaces(places)
-            b.startingAddress.showDropDown()
-        })
-        b.startingAddress.setOnEditorActionListener { textView, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_NEXT) {
-                if (TextUtils.isEmpty(b.arrivalAddress.text)) {
-                    b.arrivalAddress.requestFocus()
-                } else {
-                    model.directionsTrigger.trigger()
-                    Views.hideSoftInput(textView)
+        val resolveNextAddressFocus = {
+            when {
+                binding.fromAddress.text.isNullOrEmpty() -> {
+                    binding.fromAddress.requestFocus()
+                    binding.fromAddress.showDropDown()
                 }
-                true
-            } else false
-        }
-        val arrivalAddressAdapter = LocationHintsAdapter(googleApiClient, this)
-        b.arrivalAddress.setAdapter(arrivalAddressAdapter)
-        b.arrivalAddress.onItemClickListener = arrivalAddressAdapter.getItemListener(model.arrivalCurrentPlaceTrigger)
-        model.arrivalCurrentPlace.observe(this, Observer { places ->
-            arrivalAddressAdapter.setCurrentPlaces(places)
-            b.arrivalAddress.showDropDown()
-        })
-        b.arrivalAddress.setOnEditorActionListener { textView, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                model.directionsTrigger.trigger()
-                Views.hideSoftInput(textView)
-                true
-            } else false
-        }
-        b.arrivalAddress.setOnItemClickListener { _, _, _, _ ->
-            model.directionsTrigger.trigger()
-            Views.hideSoftInput(b.arrivalAddress)
-        }
-        model.locationPermissionCheck.handleOn(this, "location_permission")
-        model.associate.observe(this, Observer { associate ->
-            associate?.defaultFromAddress?.let { address ->
-                startingAddressAdapter.setOfficeAddress(address)
-                arrivalAddressAdapter.setOfficeAddress(address)
+                binding.toAddress.text.isNullOrEmpty() -> {
+                    binding.toAddress.requestFocus()
+                    binding.toAddress.showDropDown()
+                }
+                else -> {
+                    vm.computeDirections()
+                    binding.fromAddress.dismissDropDown()
+                    binding.toAddress.dismissDropDown()
+                    binding.toAddress.hideSoftInput()
+                }
             }
+        }
+        val autocompleteClient = Places.getGeoDataClient(this, null)
+        val fromAddressAdapter = LocationHintsAdapter(autocompleteClient)
+        binding.fromAddress.setAdapter(fromAddressAdapter)
+        binding.fromAddress.setOnItemClickListener { _, _, i, _ ->
+            if (fromAddressAdapter.isCurrentLocationItemPosition(i)) vm.addCurrentLocationHints()
+            else resolveNextAddressFocus()
+        }
+        binding.fromAddress.setOnEditorActionListener(
+                onNext = { resolveNextAddressFocus(); true }
+        )
+        val toAddressAdapter = LocationHintsAdapter(autocompleteClient)
+        binding.toAddress.setAdapter(toAddressAdapter)
+        binding.toAddress.setOnEditorActionListener(
+                onDone = { resolveNextAddressFocus(); true }
+        )
+        binding.toAddress.setOnItemClickListener { _, _, i, _ ->
+            if (toAddressAdapter.isCurrentLocationItemPosition(i)) vm.addCurrentLocationHints()
+            else resolveNextAddressFocus()
+        }
+        vm.associate.observe(this, Observer { associate ->
+            associate?.defaultFromAddress?.let { address ->
+                fromAddressAdapter.setOfficeAddress(address)
+                toAddressAdapter.setOfficeAddress(address)
+            }
+        })
+        vm.currentPlaces.observe(this, Observer { places ->
+            fromAddressAdapter.setCurrentPlaces(places)
+            toAddressAdapter.setCurrentPlaces(places)
+            if (binding.fromAddress.hasFocus()) binding.fromAddress.showDropDown()
+            else if (binding.toAddress.hasFocus()) binding.toAddress.showDropDown()
+        })
+        vm.currentPlacesLoading.observe(this, Observer { loading ->
+            fromAddressAdapter.currentPlacesLoading = loading ?: false
+            toAddressAdapter.currentPlacesLoading = loading ?: false
         })
 
         // Map
-        b.map.onCreate(savedInstanceState)
-        b.map.getMapAsync { map ->
-            map.setOnMapClickListener { model.directionsTrigger.trigger() }
+        binding.map.onCreate(savedInstanceState)
+        binding.map.getMapAsync { map ->
+            map.setOnMapClickListener { vm.computeDirections() }
             map.uiSettings.isMapToolbarEnabled = false
         }
-        model.directions.observe(this, Observer { result ->
-            model.directionsLoading.postValue(false)
-            if (result != null) {
-                if (result.routes.isEmpty()) {
-                    Snackbar.make(b.root, R.string.no_directions_found, Snackbar.LENGTH_SHORT).show()
-                } else {
-                    var distance = GeoUtils.getDistance(result.routes[0])
-                    if (b.roundTrip.isChecked) distance *= 2
-                    val currentDistance = model.allowance.distance
-                    if (currentDistance != null && currentDistance.toDouble() != distance) {
-                        Snackbar.make(b.root, R.string.distance_updated, Snackbar.LENGTH_LONG)
-                                .setAction(android.R.string.cancel) { model.setDistance(currentDistance) }
-                                .show()
-                    }
-                    model.setPolyline(result.routes[0].overviewPolyline, distance.toInt())
-                }
-            }
-        })
-        model.directionsLoading.observe(this, Observer { loading ->
-            if (loading == true)
-                b.mapProgress.show()
-            else
-                b.mapProgress.hide()
+        vm.directionsLoading.observe(this, Observer { loading ->
+            if (loading == true) binding.mapProgress.show()
+            else binding.mapProgress.hide()
         })
 
         // Round trip
-        b.roundTrip.setOnCheckedChangeListener { _, checked -> model.toggleRoundTrip(checked) }
+        binding.roundTrip.setOnCheckedChangeListener { _, checked -> vm.toggleRoundTrip(checked) }
 
         // Dates
-        b.datesLayout.setOnClickListener {
-            DatesPickerFragment.newInstance(model.allowance.dates)
-                    .showForResult(this, "dates_picker")
-        }
-        ArchDialogs.resultOf(DatesPickerFragment::class.java, "dates_picker", this)
-                .observe(this, Observer { if (it != null) model.setDates(it) })
+        binding.datesLayout.setOnClickListener { vm.showDatesPicker() }
 
         // Data
-        model.allowanceData.observe(this, Observer { exp ->
-            b.allowance = exp
+        vm.allowanceData.observe(this, Observer { exp ->
+            binding.allowance = exp
 
             // Bind dates
             val dateFormat = fullDateFormat()
-            b.dates.text = TextUtils.join("\n", exp?.dates?.map { dateFormat.format(it) })
+            binding.dates.text = TextUtils.join("\n", exp?.dates?.map { dateFormat.format(it) })
 
         })
-        model.vehicle.observe(this, Observer { b.vehicle = it })
-        model.vehicles.observe(this, Observer { b.noVehicle = it?.isEmpty() ?: false })
-        model.clients.observe(this, Observer { clients ->
+        vm.vehicle.observe(this, Observer { binding.vehicle = it })
+        vm.vehicles.observe(this, Observer { binding.noVehicle = it?.isEmpty() ?: false })
+        vm.clients.observe(this, Observer { clients ->
             hintsAdapter.setClients(clients)
-            startingAddressAdapter.setClients(clients)
-            arrivalAddressAdapter.setClients(clients)
+            fromAddressAdapter.setClients(clients)
+            toAddressAdapter.setClients(clients)
         })
-        model.cardProcessing.observe(this, Observer { b.cardProcessing = it ?: false })
-        model.errorEvent.observe(this, Observer { e ->
-            when (e) {
-                is UnsupportedFileTypeException -> {
-                    Snackbar.make(b.root, R.string.unsupported_type_error, Snackbar.LENGTH_LONG)
-                            .setAction(R.string.add_vehicle_card) { showCardPicker() }
-                            .show()
-                }
-                else -> {
-                    Snackbar.make(b.root, R.string.generic_error_message, Snackbar.LENGTH_LONG).show()
-                }
-            }
-        })
-    }
-
-    private fun showCardPicker() {
-        startActivityForResult(
-                Intents.getContent(Uris.SUPPORTED_TYPES, getString(R.string.add_vehicle_card)),
-                REQUEST_ADD_VEHICLE_CARD
-        )
+        vm.cardProcessing.observe(this, Observer { binding.cardProcessing = it ?: false })
     }
 
     private fun expandAddresses(b: AllowanceActivityBinding) {
         b.locationStartIcon.visibility = View.VISIBLE
-        b.startingAddress.visibility = View.VISIBLE
-        b.arrivalAddress.visibility = View.VISIBLE
-        b.map.visibility = View.VISIBLE
+        b.fromAddress.visibility = View.VISIBLE
+        b.toAddress.visibility = View.VISIBLE
+        b.mapFrame.visibility = View.VISIBLE
         b.roundTrip.visibility = View.VISIBLE
         b.expandTrip.visibility = View.GONE
-        if (model.directionsLoading.value == true) {
-            b.mapProgress.show()
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.allowance, menu)
+        val editDoneItem = menu.findItem(R.id.edit_done)
+        val saveItem = menu.findItem(R.id.save)
+        vm.purposeHintsShown.observe(this, Observer { shown ->
+            editDoneItem.isVisible = shown == true
+            saveItem.isVisible = shown != true
+
+        })
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.save -> true
+            R.id.edit_done -> {
+                vm.purposeHintsShown.value = false; true
+            }
+            R.id.save -> {
+                validate(); true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        when (requestCode) {
-            REQUEST_ADD_VEHICLE_CARD -> if (resultCode == Activity.RESULT_OK && data != null) {
-                model.addVehicleCard(data.data)
-            }
-            else -> super.onActivityResult(requestCode, resultCode, data)
+    private fun validate() {
+        val allowance = vm.allowance
+
+        if (allowance.purpose.isNullOrBlank()) {
+            showSnackbar(R.string.allowance_purpose_mandatory_error)
+            binding.purpose.requestFocus()
+            return
         }
+
+        vm.save()
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -281,7 +262,9 @@ class AllowanceActivity : AppCompatActivity() {
         return true
     }
 
-    class VM(application: Application) : AndroidViewModel(application) {
+    class VM(application: Application) : UiModel<AllowanceActivity>(application) {
+
+        val purposeHintsShown = MutableLiveData<Boolean>()
 
         private val repository = DataRepository.of(application)
 
@@ -293,7 +276,9 @@ class AllowanceActivity : AppCompatActivity() {
         val vehicles = repository.vehicles().toLiveData()
         val vehicle = MediatorLiveData<Vehicle>().apply {
             val select = {
-                vehicles.value?.let { value = it.firstOrNull { it.id == allowance.vehicleId } }
+                vehicles.value?.let {
+                    value = it.firstOrNull { it.id == allowance.vehicleId }
+                }
             }
             addSource(allowanceData) { select() }
             addSource(vehicles) { select() }
@@ -301,37 +286,6 @@ class AllowanceActivity : AppCompatActivity() {
 
         val clients = repository.clients()
 
-        val locationPermissionCheck = PermissionCheck(getApplication(), Manifest.permission.ACCESS_FINE_LOCATION)
-        private val currentPlace: LiveData<PlaceLikelihoodBuffer> = locationPermissionCheck.allGranted().switchMap { granted ->
-            @SuppressLint("MissingPermission")
-            if (granted)
-                GoogleApiClientData(getApplication()) { addApi(Places.PLACE_DETECTION_API) }.cancellingSwitchMap { c ->
-                    Places.PlaceDetectionApi.getCurrentPlace(c, null)
-                            .toData()
-                }
-            else
-                null
-        }
-        val startingCurrentPlaceTrigger = SingleLiveEvent<Any>()
-        val arrivalCurrentPlaceTrigger = SingleLiveEvent<Any>()
-        val startingCurrentPlace = startingCurrentPlaceTrigger.switchMap { currentPlace }
-        val arrivalCurrentPlace = arrivalCurrentPlaceTrigger.switchMap { currentPlace }
-        val directionsTrigger = SingleLiveEvent<Any>()
-        val directionsLoading = MutableLiveData<Boolean>()
-        val directions = directionsTrigger.cancellingSwitchMap {
-            val exp = allowanceData.value
-            if (exp != null && !TextUtils.isEmpty(exp.fromAddress) && !TextUtils.isEmpty(exp.toAddress)) {
-                directionsLoading.postValue(true)
-                DirectionsApi.getDirections(GeoUtils.getGeoApiContext(application), exp.fromAddress, exp.toAddress)
-                        .mode(TravelMode.DRIVING)
-                        .alternatives(false)
-                        .toData()
-            } else {
-                null
-            }
-        }
-
-        val errorEvent = SingleLiveEvent<Throwable>()
         var cardProcessing = ProgressData<Vehicle>()
 
         init {
@@ -346,8 +300,97 @@ class AllowanceActivity : AppCompatActivity() {
             })
         }
 
-        fun setVehicle(vehicle: Vehicle) {
-            allowanceData.update { vehicleId = vehicle.id }
+        val currentPlaces = MutableLiveData<List<LocationHintsAdapter.Item>>()
+        val currentPlacesLoading = MutableLiveData<Boolean>()
+
+        @SuppressLint("MissingPermission")
+        fun addCurrentLocationHints() {
+            requirePermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), "location_permission") {
+                currentPlacesLoading.postValue(true)
+                Places.getPlaceDetectionClient(getApplication<Application>(), null)
+                        .getCurrentPlace(null)
+                        .addOnSuccessListener { r ->
+                            currentPlaces.postValue(r.map { p -> LocationHintsAdapter.Item(p.place) })
+                            r.release()
+                        }
+                        .addOnFailureListener { e -> onUi { showErrorSnackbar(e) } }
+                        .addOnCompleteListener { currentPlacesLoading.postValue(false) }
+            }
+        }
+
+        val directionsLoading = MutableLiveData<Boolean>()
+        private var directionsRequest: DirectionsApiRequest? = null
+
+        fun computeDirections() {
+            directionsLoading.postValue(true)
+            directionsRequest?.cancel()
+            directionsRequest = DirectionsApi.getDirections(GeoUtils.getGeoApiContext(getApplication()), allowance.fromAddress, allowance.toAddress)
+                    .mode(TravelMode.DRIVING)
+                    .alternatives(false)
+            directionsRequest?.setCallback(
+                    onResult = { r ->
+                        if (r != null) {
+                            if (r.routes.isEmpty()) {
+                                onUi { showSnackbar(R.string.no_directions_found, Snackbar.LENGTH_SHORT) }
+                                allowanceData.update { polyline = null }
+                            } else {
+                                var newDistance = GeoUtils.getDistance(r.routes[0])
+                                if (allowance.roundTrip == true) newDistance *= 2
+                                val currentDistance = allowance.distance
+                                if (currentDistance != null && currentDistance.toDouble() != newDistance) {
+                                    onUi {
+                                        Snackbar.make(binding.root, R.string.distance_updated, Snackbar.LENGTH_LONG)
+                                                .setAction(android.R.string.cancel) {
+                                                    allowanceData.update { distance = currentDistance }
+                                                }
+                                                .show()
+                                    }
+                                }
+                                allowanceData.update {
+                                    distance = newDistance.toInt()
+                                    polyline = r.routes[0].overviewPolyline.decodePath().map { LatLng(it.lat, it.lng) }
+                                }
+                            }
+                        }
+                        directionsLoading.postValue(false)
+                    },
+                    onFailure = { e ->
+                        onUi { showErrorSnackbar(e) }
+                        directionsLoading.postValue(false)
+                    }
+            )
+        }
+
+        fun showVehiclePicker() {
+            onUi {
+                VehiclePickerFragment().show(supportFragmentManager, "vehicle_picker") {
+                    allowanceData.update { vehicleId = it }
+                }
+            }
+        }
+
+        internal fun showVehicleCardPicker() {
+            onUi {
+                startActivityForResult(
+                        Intents.getContent(Uris.SUPPORTED_TYPES, getString(R.string.add_vehicle_card)),
+                        "add_card"
+                ) { code, data ->
+                    if (code == Activity.RESULT_OK && data != null) {
+                        if (Uris.checkSupportedType(this@VM.getApplication(), data.data) == true) {
+                            vehicle.value?.let { v ->
+                                repository.saveVehicle(v.copy(card = data.data))
+                                        .compose(cardProcessing)
+                                        .subscribe(
+                                                { onUi { showSnackbar(R.string.vehicle_card_saved) } },
+                                                { e -> onUi { showErrorSnackbar(e) } }
+                                        )
+                            }
+                        } else {
+                            onUi { showSnackbar(R.string.unsupported_type_error) }
+                        }
+                    }
+                }
+            }
         }
 
         fun setClient(client: Client) {
@@ -357,22 +400,11 @@ class AllowanceActivity : AppCompatActivity() {
             }
         }
 
-        fun setDates(dates: Collection<Date>) {
-            allowanceData.update {
-                this.dates = HashSet(dates)
-            }
-        }
-
-        fun setPolyline(polyline: EncodedPolyline, distance: Int) {
-            allowanceData.update {
-                this.polyline = polyline
-                this.distance = distance
-            }
-        }
-
-        fun setDistance(distance: Int) {
-            allowanceData.update {
-                this.distance = distance
+        fun showDatesPicker() {
+            onUi {
+                DatesPickerFragment.newInstance(allowance.dates).show(supportFragmentManager, "dates_picker") {
+                    allowanceData.update { dates = HashSet(it) }
+                }
             }
         }
 
@@ -385,32 +417,17 @@ class AllowanceActivity : AppCompatActivity() {
             }
         }
 
-        override fun onCleared() {
-            super.onCleared()
-            val b = currentPlace.value
-            b?.release()
-        }
-
-        internal fun addVehicleCard(uri: Uri) {
-            if (Uris.checkSupportedType(getApplication(), uri) == false) {
-                errorEvent.trigger(UnsupportedFileTypeException())
-                return
-            }
-            vehicle.value?.let { v ->
-                repository.saveVehicle(v.copy(card = uri))
-                        .compose(cardProcessing)
+        internal fun save() =
+                DataRepository.of(getApplication()).saveAllowance(allowance)
                         .subscribe(
-                                { },
-                                { e -> errorEvent.trigger(e) }
+                                { onUi { finish() } },
+                                { e -> onUi { showErrorSnackbar(e) } }
                         )
-            }
-        }
+
 
     }
 
     companion object {
-
-        private const val REQUEST_ADD_VEHICLE_CARD = 1
 
         fun newIntent(context: Context): Intent {
             return Intent(context, AllowanceActivity::class.java)

@@ -3,11 +3,10 @@ package com.cubber.tiime.app.mileages.vehicles
 import android.app.Application
 import android.app.Dialog
 import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
 import android.content.DialogInterface
 import android.os.Bundle
-import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatDialogFragment
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import com.cubber.tiime.R
@@ -15,38 +14,31 @@ import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.databinding.VehiclePickerBinding
 import com.cubber.tiime.databinding.VehiclePickerItemBinding
 import com.cubber.tiime.model.Vehicle
-import com.wapplix.ResultDialogFragment
-import com.wapplix.arch.SingleLiveEvent
-import com.wapplix.arch.UiModel
-import com.wapplix.arch.toLiveData
+import com.cubber.tiime.utils.showErrorSnackbar
+import com.wapplix.arch.*
 import com.wapplix.recycler.BindingListAdapter
+import com.wapplix.showSnackbar
 import com.wapplix.widget.setOverflowPopupMenu
 
 /**
  * Created by mike on 26/09/17.
  */
 
-class VehiclePickerFragment : ResultDialogFragment<Vehicle>(), DialogInterface.OnShowListener {
+class VehiclePickerFragment : AppCompatDialogFragment(), ResultEmitter<Long>, DialogInterface.OnShowListener {
 
     private lateinit var vm: VM
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
-        val b = VehiclePickerBinding.inflate(LayoutInflater.from(context))
-        val adapter = Adapter()
-        b.list.adapter = adapter
+        val binding = VehiclePickerBinding.inflate(LayoutInflater.from(context))
+        binding.list.adapter = VehiclesAdapter()
 
-        vm = ViewModelProviders.of(this).get(VM::class.java)
-        vm.vehicles.observe(this, Observer { b.vehicles = it })
-
-        vm.handleOn(this)
-        vm.errorEvent.observe(this, Observer { e ->
-            Snackbar.make(b.root, R.string.generic_error_message, Snackbar.LENGTH_LONG).show()
-        })
+        vm = getUiModel()
+        vm.vehicles.observe(this, Observer { binding.vehicles = it })
 
         val dialog = AlertDialog.Builder(context!!)
                 .setTitle(R.string.vehicle)
-                .setView(b.root)
+                .setView(binding.root)
                 .setNeutralButton(R.string.add_vehicle, null)
                 .create()
         dialog.setOnShowListener(this)
@@ -54,10 +46,12 @@ class VehiclePickerFragment : ResultDialogFragment<Vehicle>(), DialogInterface.O
     }
 
     override fun onShow(dialog: DialogInterface) {
-        (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener { VehicleEditorFragment().show(fragmentManager!!, "create_vehicle") }
+        (dialog as AlertDialog).getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener {
+            VehicleEditorFragment().show(fragmentManager!!, "create_vehicle")
+        }
     }
 
-    private inner class Adapter : BindingListAdapter<Vehicle, VehiclePickerItemBinding>() {
+    private inner class VehiclesAdapter : BindingListAdapter<Vehicle, VehiclePickerItemBinding>() {
 
         init {
             setHasStableIds(true)
@@ -76,26 +70,38 @@ class VehiclePickerFragment : ResultDialogFragment<Vehicle>(), DialogInterface.O
                 }
             }
             return binding
-
         }
 
         override fun onBindView(binding: VehiclePickerItemBinding, item: Vehicle) {
             binding.vehicle = item
-            binding.root.setOnClickListener { sendResult(item) }
+            binding.root.setOnClickListener {
+                result.onResult(item.id)
+                dismiss()
+            }
         }
 
     }
 
-    class VM(application: Application) : UiModel(application) {
-
-        internal val errorEvent = SingleLiveEvent<Throwable>()
+    class VM(application: Application) : UiModel<VehiclePickerFragment>(application) {
 
         internal var vehicles = DataRepository.of(getApplication()).vehicles().toLiveData()
 
         internal fun deleteVehicle(id: Long) {
-            showConfirm(title = R.string.delete_vehicle_prompt, message = R.string.delete_vehicle_message, positiveButton = R.string.delete, tag = "delete_vehicle")
-                    .flatMapCompletable { DataRepository.of(getApplication()).deleteVehicle(id) }
-                    .subscribe({}, { e -> errorEvent.trigger(e) })
+            onUi {
+                showConfirm(
+                        titleRes = R.string.delete_vehicle_prompt,
+                        messageRes = R.string.delete_vehicle_message,
+                        positiveButtonRes = R.string.delete,
+                        negativeButtonRes = android.R.string.cancel,
+                        tag = "delete_vehicle"
+                ) {
+                    DataRepository.of(getApplication()).deleteVehicle(id)
+                            .subscribe(
+                                    { onUi { showSnackbar(R.string.vehicle_deleted) } },
+                                    { e -> onUi { showErrorSnackbar(e) } }
+                            )
+                }
+            }
         }
 
     }

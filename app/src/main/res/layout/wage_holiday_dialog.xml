@@ -5,9 +5,17 @@
 
     <data>
 
+        <import type="com.cubber.tiime.utils.Formats"
+            alias="f" />
+
         <variable
             name="duration"
             type="int" />
+
+        <variable
+            name="wagePeriodWarning"
+            type="java.util.Date" />
+
     </data>
 
     <LinearLayout
@@ -34,6 +42,14 @@
                 app:visible="@{ duration == 2 }" />
 
         </android.support.v7.widget.Toolbar>
+
+        <TextView
+            app:visible="@{ wagePeriodWarning != null }"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@{ @string/holiday_wage_warning_format(f.monthFormat().format(wagePeriodWarning)) }"
+            android:padding="@dimen/spacing"
+            tools:text="@string/holiday_wage_warning_format"/>
 
         <android.support.v7.widget.RecyclerView
             android:id="@+id/type"

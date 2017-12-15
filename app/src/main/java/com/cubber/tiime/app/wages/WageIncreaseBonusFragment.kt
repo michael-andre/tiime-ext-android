@@ -14,7 +14,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import android.widget.TextView
 import com.cubber.tiime.R
 import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.databinding.WageIncreaseBonusDialogBinding
@@ -50,12 +49,7 @@ class WageIncreaseBonusFragment : BottomSheetDialogFragment() {
                 else -> false
             }
         }
-        val typeAdapter = object : SimpleAdapter<String>(context!!, android.R.layout.simple_spinner_item, R.layout.support_simple_spinner_dropdown_item) {
-            override fun onBindView(view: View, @Wage.SalaryType item: String) {
-                val tv = view.findViewById<TextView>(android.R.id.text1)
-                tv.setText(if (item == Wage.SALARY_TYPE_NET) R.string.net else R.string.gross)
-            }
-        }
+        val typeAdapter = SimpleAdapter<String>(context!!, { getString(if (it == Wage.SALARY_TYPE_NET) R.string.net else R.string.gross) })
         typeAdapter.items = listOf(Wage.SALARY_TYPE_NET, Wage.SALARY_TYPE_GROSS)
         binding.increase.applyFormat(euroFormat())
         binding.increaseType.adapter = typeAdapter

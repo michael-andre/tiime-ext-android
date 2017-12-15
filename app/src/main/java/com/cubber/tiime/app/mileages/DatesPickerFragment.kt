@@ -4,17 +4,19 @@ import android.app.Dialog
 import android.content.DialogInterface
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatDialogFragment
 import android.widget.Toast
 import com.cubber.tiime.R
 import com.prolificinteractive.materialcalendarview.MaterialCalendarView
-import com.wapplix.ResultDialogFragment
+import com.wapplix.arch.ResultEmitter
+import com.wapplix.arch.result
 import java.util.*
 
 /**
  * Created by mike on 27/09/17.
  */
 
-class DatesPickerFragment : ResultDialogFragment<Collection<Date>>(), DialogInterface.OnShowListener {
+class DatesPickerFragment : AppCompatDialogFragment(), ResultEmitter<Collection<Date>>, DialogInterface.OnShowListener {
 
     private lateinit var calendarView: MaterialCalendarView
 
@@ -24,7 +26,9 @@ class DatesPickerFragment : ResultDialogFragment<Collection<Date>>(), DialogInte
         val selection = arguments?.getSerializable(ARG_DATES) as ArrayList<Date>?
 
         calendarView = MaterialCalendarView(context!!)
-        calendarView.setHeaderTextAppearance(android.support.design.R.style.TextAppearance_AppCompat_Widget_Button_Colored)
+        calendarView.setHeaderTextAppearance(android.support.design.R.style.TextAppearance_AppCompat_Widget_Button)
+        val padding = resources.getDimensionPixelSize(R.dimen.spacing)
+        calendarView.setPadding(padding, 0, padding,0)
         calendarView.selectionMode = MaterialCalendarView.SELECTION_MODE_MULTIPLE
         val cal = Calendar.getInstance()
         val sb = calendarView.state().edit()
@@ -52,7 +56,8 @@ class DatesPickerFragment : ResultDialogFragment<Collection<Date>>(), DialogInte
             if (dates.isEmpty()) {
                 Toast.makeText(context, R.string.dates_empty_error, Toast.LENGTH_LONG).show()
             } else {
-                sendResult(dates)
+                result.onResult(dates)
+                dismiss()
             }
         }
     }

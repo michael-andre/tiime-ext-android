@@ -19,7 +19,7 @@ import com.cubber.tiime.R
 import com.cubber.tiime.app.mileages.AllowancesFragment
 import com.cubber.tiime.app.wages.WagesFragment
 import com.cubber.tiime.data.DataRepository
-import com.wapplix.arch.map
+import com.wapplix.arch.toLiveData
 import kotlinx.android.synthetic.main.main_activity.*
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
@@ -103,6 +103,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val pendingWages = DataRepository.of(app).employees()
                 .map { list -> list.any { it.wagesValidationRequired } }
+                .toLiveData()
 
     }
 

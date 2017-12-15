@@ -4,7 +4,10 @@
     <color name="colorPrimary">#29b6f6</color>
     <color name="colorPrimaryDark">#2396cc</color>
     <color name="colorAccent">#ffab00</color>
+
     <color name="trip_polyline">#1565c0</color>
+    <color name="placeholder">#ffab00</color>
+    <color name="map_background">#e9e7e4</color>
 
     <color name="holiday_compensatory_time">#FF9900</color>
     <color name="holiday_paid_vacation">#97D522</color>

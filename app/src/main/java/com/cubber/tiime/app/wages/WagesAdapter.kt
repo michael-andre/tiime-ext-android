@@ -23,12 +23,13 @@ import com.cubber.tiime.databinding.WageItemBinding
 import com.cubber.tiime.model.Holiday
 import com.cubber.tiime.model.Wage
 import com.cubber.tiime.utils.holidayTypeColor
-import com.cubber.tiime.utils.resolveDrawableAttr
 import com.prolificinteractive.materialcalendarview.*
 import com.prolificinteractive.materialcalendarview.format.DayFormatter
 import com.prolificinteractive.materialcalendarview.format.WeekDayFormatter
+import com.wapplix.arch.paging.diffCallbackBy
 import com.wapplix.recycler.BindingPagedListAdapter
 import java.util.*
+import kotlin.math.ceil
 
 /**
  * Created by mike on 21/09/17.
@@ -37,24 +38,16 @@ class WagesAdapter(
         context: Context,
         private val expandedIds: LongSparseArray<Boolean>,
         private val listener: Listener
-) : BindingPagedListAdapter<Wage, WageItemBinding>({ id }) {
+) : BindingPagedListAdapter<Wage, WageItemBinding>(diffCallbackBy { id }) {
 
     interface Listener {
         fun onDateSelected(date: Date, days: Int)
         fun onEditComment(item: Wage)
         fun onEditIncreaseBonus(item: Wage)
+        fun onViewAttachment(item: Wage)
     }
 
     private val holidayDecorators = mutableMapOf<DecoratorKey, HolidayDecorator>()
-    private val commonDayDecorator = object : DayViewDecorator {
-
-        private val background = resolveDrawableAttr(context, R.attr.selectableItemBackgroundBorderless)!!
-
-        override fun shouldDecorate(day: CalendarDay): Boolean = true
-
-        override fun decorate(view: DayViewFacade) = view.setBackgroundDrawable(background)
-
-    }
 
     private val weekDayFormatter = WeekDayFormatter { dayOfWeek -> DateUtils.getDayOfWeekString(dayOfWeek, DateUtils.LENGTH_SHORTEST) }
     private val dayFormatter = DayFormatter { day -> DayFormatter.DEFAULT.format(day) }
@@ -83,11 +76,11 @@ class WagesAdapter(
         for (wage in pagedList) {
             for (holiday in wage.holidays.orEmpty()) {
                 val type = if (Holiday.TYPES.contains(holiday.type)) holiday.type else null
-                val d = holidayDecorators[DecoratorKey(type, holiday.duration == 1, wage.editable)]!!
+                val d = holidayDecorators[DecoratorKey(type, holiday.duration == 1, Wages.isEditable(wage))]!!
                 d.days.add(CalendarDay.from(holiday.startDate))
                 if (holiday.duration > 2) {
                     cal.time = holiday.startDate
-                    for (offset in 2..(holiday.duration / 2)) {
+                    for (offset in 2..ceil(holiday.duration / 2f).toInt()) {
                         cal.add(Calendar.DAY_OF_MONTH, 1)
                         d.days.add(CalendarDay.from(cal))
                     }
@@ -100,7 +93,8 @@ class WagesAdapter(
         return WageItemBinding.inflate(inflater, parent, false).apply {
             calendar.topbarVisible = false
             calendar.isPagingEnabled = false
-            calendar.isDynamicHeightEnabled = true
+            calendar.firstDayOfWeek
+            //calendar.isDynamicHeightEnabled = true
             calendar.selectionMode = MaterialCalendarView.SELECTION_MODE_SINGLE
             calendar.addDecorators(holidayDecorators.values)
             calendar.setOnDateChangedListener(dateListener)
@@ -113,8 +107,8 @@ class WagesAdapter(
                 private val increaseBonusItem by lazy { toolbar.menu.findItem(R.id.increase_bonus) }
                 private val commentItem by lazy { toolbar.menu.findItem(R.id.comment) }
 
-                override fun onBound(binding: WageItemBinding?) {
-                    binding?.wage?.apply {
+                override fun onBound(binding: WageItemBinding) {
+                    binding.wage?.apply {
                         increaseBonusItem.isVisible = editable
                         commentItem.isVisible = editable
                     }
@@ -127,12 +121,17 @@ class WagesAdapter(
     override fun onBindView(binding: WageItemBinding, item: Wage) {
         with(binding) {
             wage = item
+            editable = Wages.isEditable(item)
+            validationRequired = item.status == Wage.STATUS_VALIDATION_REQUIRED
             holidaysSummary = Wages.getHolidaysSummary(item)
             calendar.visibility = if (shouldExpand(item)) View.VISIBLE else View.GONE
             with(calendar.state().edit()) {
                 val cal = Calendar.getInstance()
+                cal.firstDayOfWeek
                 cal.time = item.period
                 cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH))
+                // Only allow dynamic sizing when the first day of the month is on week 1 (bug)
+                calendar.isDynamicHeightEnabled = cal.get(Calendar.WEEK_OF_MONTH) == 1
                 setMinimumDate(cal)
                 cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH))
                 setMaximumDate(cal)
@@ -157,6 +156,7 @@ class WagesAdapter(
                 }
             }
             commentRow.setOnClickListener { listener.onEditComment(item) }
+            attachmentRow.setOnClickListener { listener.onViewAttachment(item) }
             increaseBonusRow.setOnClickListener { listener.onEditIncreaseBonus(item) }
         }
     }
@@ -164,7 +164,7 @@ class WagesAdapter(
     private fun shouldExpand(item: Wage): Boolean {
         var expanded = expandedIds.get(item.id)
         if (expanded == null) {
-            expanded = item.editable
+            expanded = Wages.isEditable(item)
             expandedIds.put(item.id, expanded)
         }
         return expanded

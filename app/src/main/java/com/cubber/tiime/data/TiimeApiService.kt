@@ -79,4 +79,18 @@ interface TiimeApiService {
             @Query("id") id: Long
     ): Single<Wage>
 
+    @POST("employees/{employeeId}/wages/{wageId}")
+    fun addEmployeeWageHoliday(
+            @Query("employeeId") employeeId: Long,
+            @Query("wageId") wageId: Long,
+            @Body holiday: Holiday
+    ): Single<Holiday>
+
+    @DELETE("employees/{employeeId}/wages/{wageId}/holidays/{id}")
+    fun deleteEmployeeWageHoliday(
+            @Query("employeeId") employeeId: Long,
+            @Query("wageId") wageId: Long,
+            @Query("id") id: Long
+    ): Completable
+
 }

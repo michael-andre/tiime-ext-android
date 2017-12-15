@@ -17,7 +17,9 @@ import java.util.*
 
 class DataRepository {
 
-    private val vehiclesUpdate = PublishSubject.create<Iterable<Vehicle>>()
+    val vehiclesUpdate = PublishSubject.create<Iterable<Vehicle>>()
+    val allowancesUpdate = PublishSubject.create<Iterable<MileageAllowance>>()
+    val wagesUpdate = PublishSubject.create<Iterable<Wage>>()
 
     init {
         vehiclesUpdate.subscribe { n -> Log.i("DR", "Subject:" + n.toString()) }
@@ -64,10 +66,9 @@ class DataRepository {
                     .map { it.clients }
                     .toLiveData()
 
-    fun employees(): LiveData<List<Employee>> =
+    fun employees() =
             apiService.getEmployees()
                     .map { it.employees }
-                    .toLiveData()
 
     fun getEmployeeWages(employeeId: Long, from: Date?, to: Date?): Observable<List<Wage>> =
             apiService.getEmployeeWages(employeeId, from, to)
@@ -78,14 +79,25 @@ class DataRepository {
             apiService.getEmployeeWage(employeeId, id)
                     .toLiveData()
 
-    fun getMileageAllowances(start: Int = 0, count: Int?): List<MileageAllowance> =
+    fun deleteEmployeeWageHoliday(employeeId: Long, wageId: Long, holidayId: Long): Completable =
+            apiService.deleteEmployeeWageHoliday(employeeId, wageId, holidayId)
+                    .doOnComplete { wagesUpdate.onNext(emptyList()) }
+
+    fun addEmployeeWagesHoliday(employeeId: Long, wageId: Long, holiday: Holiday) =
+            apiService.addEmployeeWageHoliday(employeeId, wageId, holiday)
+                    .doOnSuccess { wagesUpdate.onNext(emptyList()) }
+
+    fun getMileageAllowances(start: Int = 0, count: Int?): Single<List<MileageAllowance>> =
             apiService.getAssociateMileages(start, count)
                     .map { it.mileages ?: emptyList() }
-                    .blockingGet()
+
+    fun saveAllowance(allowance: MileageAllowance) =
+            apiService.addAssociateMileage(allowance)
+                    .doAfterSuccess { a -> allowancesUpdate.onNext(listOf(a)) }
 
     companion object {
 
-        val repository by lazy { DataRepository() }
+        private val repository by lazy { DataRepository() }
 
         fun of(context: Context): DataRepository {
             return repository

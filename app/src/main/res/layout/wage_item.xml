@@ -8,12 +8,24 @@
         <import type="com.cubber.tiime.model.Wage" />
 
         <import
+            alias="res"
+            type="com.cubber.tiime.utils.Resources" />
+
+        <import
             alias="f"
             type="com.cubber.tiime.utils.Formats" />
 
         <variable
             name="wage"
             type="com.cubber.tiime.model.Wage" />
+
+        <variable
+            name="editable"
+            type="boolean" />
+
+        <variable
+            name="validationRequired"
+            type="boolean" />
 
         <variable
             name="holidaysSummary"
@@ -51,8 +63,7 @@
                     android:drawablePadding="@dimen/small_spacing"
                     android:drawableStart="@drawable/ic_validate_24dp"
                     android:text="@string/validate"
-                    app:visible="@{ wage.editable &amp;&amp; !wage.validated }" />
-                    app:visible="@{ wage.editable &amp;&amp; !wage.validated }" />
+                    app:visible="@{ editable &amp;&amp; validationRequired }" />
 
             </android.support.v7.widget.Toolbar>
 
@@ -239,8 +250,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?selectableItemBackground"
-                android:clickable="@{ wage.editable }"
-                android:focusable="@{ wage.editable }"
+                android:clickable="@{ editable }"
+                android:focusable="@{ editable }"
                 android:paddingBottom="@dimen/spacing"
                 android:paddingTop="@dimen/spacing"
                 app:visible="@{ wage.increase != null || wage.bonus != null }">
@@ -311,8 +322,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="?selectableItemBackground"
-                android:clickable="@{ wage.editable }"
-                android:focusable="@{ wage.editable }"
+                android:clickable="@{ editable }"
+                android:focusable="@{ editable }"
                 android:paddingBottom="@dimen/spacing"
                 android:paddingTop="@dimen/spacing"
                 app:visible="@{ wage.comment != null }">
@@ -336,10 +347,51 @@
                     android:layout_marginLeft="@dimen/large_spacing"
                     android:layout_marginRight="@dimen/large_spacing"
                     android:text="@{ wage.comment }"
-                    android:textAppearance="?android:textAppearanceSmall"
+                    android:textAppearance="?android:textAppearanceListItemSmall"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/comment_icon"
                     tools:text="Commentaire" />
+
+            </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/attachment_row"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?selectableItemBackground"
+                android:clickable="@{ editable }"
+                android:focusable="@{ editable }"
+                android:paddingBottom="@dimen/spacing"
+                android:paddingTop="@dimen/spacing"
+                app:visible="@{ wage.attachment != null }">
+
+                <ImageView
+                    android:id="@+id/attachment_icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/large_spacing"
+                    android:layout_marginTop="2dp"
+                    android:tint="@android:color/darker_gray"
+                    app:layout_constraintEnd_toStartOf="@id/attachment"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/ic_attachment_20dp" />
+
+                <TextView
+                    android:id="@+id/attachment"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="@dimen/large_spacing"
+                    android:layout_marginRight="@dimen/large_spacing"
+                    android:drawablePadding="@dimen/small_spacing"
+                    android:drawableStart="@{ res.fileIcon(context, wage.attachment) }"
+                    android:gravity="center_vertical"
+                    android:text="@string/attachment"
+                    android:textAppearance="?android:textAppearanceListItemSmall"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/attachment_icon"
+                    tools:drawableStart="@drawable/ic_file_generic"
+                    tools:ignore="RtlCompat" />
 
             </android.support.constraint.ConstraintLayout>
 

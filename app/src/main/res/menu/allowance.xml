@@ -2,8 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <item android:id="@+id/save"
+    <item
+        android:id="@+id/save"
         android:title="@string/save"
+        app:showAsAction="ifRoom|withText" />
+
+    <item
+        android:id="@+id/edit_done"
+        android:title="@android:string/ok"
+        android:visible="false"
         app:showAsAction="ifRoom|withText" />
 
 </menu>

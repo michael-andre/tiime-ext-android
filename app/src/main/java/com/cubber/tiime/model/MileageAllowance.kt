@@ -1,6 +1,6 @@
 package com.cubber.tiime.model
 
-import com.google.maps.model.EncodedPolyline
+import com.google.android.gms.maps.model.LatLng
 import java.util.*
 
 /**
@@ -17,5 +17,5 @@ data class MileageAllowance(
         var dates: Set<Date>? = null,
         var comment: String? = null,
         var roundTrip: Boolean? = null,
-        var polyline: EncodedPolyline? = null
+        var polyline: List<LatLng>? = null
 )

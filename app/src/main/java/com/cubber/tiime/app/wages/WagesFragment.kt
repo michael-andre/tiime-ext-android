@@ -1,13 +1,9 @@
 package com.cubber.tiime.app.wages
 
 import android.app.Application
-import android.arch.lifecycle.AndroidViewModel
-import android.arch.lifecycle.Observer
-import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
-import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v7.app.AppCompatActivity
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -19,7 +15,11 @@ import com.cubber.tiime.R
 import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.databinding.WagesFragmentBinding
 import com.cubber.tiime.model.Employee
-
+import com.wapplix.arch.UiModel
+import com.wapplix.arch.getUiModel
+import com.wapplix.arch.observe
+import com.wapplix.arch.toLiveData
+import com.wapplix.pager.FragmentStateListAdapter
 
 
 /**
@@ -28,45 +28,38 @@ import com.cubber.tiime.model.Employee
 
 class WagesFragment : Fragment() {
 
-    private lateinit var model: VM
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val b = WagesFragmentBinding.inflate(inflater, container, false)
+        val binding = WagesFragmentBinding.inflate(inflater, container, false)
 
-        (activity as AppCompatActivity).setSupportActionBar(b.toolbar)
-        b.toolbar.setTitle(R.string.wages)
+        (activity as AppCompatActivity).setSupportActionBar(binding.toolbar)
+        binding.toolbar.setTitle(R.string.wages)
 
         val adapter = Adapter(childFragmentManager)
-        b.pager.adapter = adapter
-        b.tabs.setupWithViewPager(b.pager)
+        binding.pager.adapter = adapter
+        binding.tabs.setupWithViewPager(binding.pager)
 
-        model = ViewModelProviders.of(this).get(VM::class.java)
-        model.employees.observe(this, Observer { adapter.setEmployees(it) })
-
-        return b.root
-    }
-
-    private inner class Adapter(fm: FragmentManager) : FragmentStatePagerAdapter(fm) {
-
-        private var employees: List<Employee>? = null
-        private val indicatorSpan by lazy { ImageSpan(context, R.drawable.indicator_action_required_small, ImageSpan.ALIGN_BASELINE) }
-
-        fun setEmployees(employees: List<Employee>?) {
-            this.employees = employees
-            notifyDataSetChanged()
+        val vm: VM = getUiModel()
+        observe(vm.employees) {
+            binding.employees = it
         }
 
-        override fun getCount(): Int = if (employees == null) 0 else employees!!.size
+        return binding.root
+    }
 
-        override fun getItem(position: Int): Fragment = EmployeeWagesFragment.newInstance(employees!![position].id)
+    private inner class Adapter(fm: FragmentManager) : FragmentStateListAdapter<Employee>(fm) {
+
+        private val indicatorSpan by lazy { ImageSpan(context, R.drawable.indicator_action_required_small, ImageSpan.ALIGN_BASELINE) }
+
+        override fun onCreateFragment(item: Employee)
+                = EmployeeWagesFragment.newInstance(item.id)
 
         override fun getPageTitle(position: Int): CharSequence? {
-            val employee = employees!![position]
+            val employee = items!![position]
             val builder = SpannableStringBuilder()
             builder.append(employee.name)
             if (employee.wagesValidationRequired) {
@@ -78,9 +71,9 @@ class WagesFragment : Fragment() {
 
     }
 
-    class VM(application: Application) : AndroidViewModel(application) {
+    class VM(application: Application) : UiModel<WagesFragment>(application) {
 
-        var employees = DataRepository.of(getApplication()).employees()
+        var employees = DataRepository.of(getApplication()).employees().toLiveData()
 
     }
 

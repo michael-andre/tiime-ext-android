@@ -81,7 +81,6 @@
                     android:minHeight="?dropdownListPreferredItemHeight"
                     android:onItemSelected="@{ typeListener }"
                     android:selectedItem="@={ vehicle.type }"
-
                     tools:listitem="@layout/vehicle_type_spinner_item" />
 
             </LinearLayout>

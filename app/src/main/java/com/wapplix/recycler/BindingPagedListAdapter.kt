@@ -13,20 +13,7 @@ import android.view.ViewGroup
 
 abstract class BindingPagedListAdapter<T, VDB : ViewDataBinding> : PagedListAdapter<T, BindingViewHolder<VDB>> {
 
-    protected constructor(id: T.() -> Any) : super(object : DiffCallback<T>() {
-
-        override fun areContentsTheSame(oldItem: T, newItem: T): Boolean {
-            return id(oldItem) == id(newItem)
-        }
-
-        override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
-            return oldItem == newItem
-        }
-
-    })
-
     constructor(diffCallback: DiffCallback<T>) : super(diffCallback)
-
     constructor(config: ListAdapterConfig<T>) : super(config)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindingViewHolder<VDB> {

@@ -51,7 +51,11 @@ class WagesSource(context: Context, private val employeeId: Long) : KeyedDataSou
     }
 
     private fun load(from: Date, to: Date): List<Wage> {
-        return DataRepository.of(context).getEmployeeWages(employeeId, from, to).blockingFirst()
+        val wages = DataRepository.of(context).getEmployeeWages(employeeId, from, to).blockingFirst()
+        DataRepository.of(context).wagesUpdate.firstElement().subscribe {
+            invalidate()
+        }
+        return wages
     }
 
 }

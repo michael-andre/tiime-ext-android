@@ -5,7 +5,7 @@
     <string name="navigation_drawer_open">Ouvrir le menu</string>
     <string name="navigation_drawer_close">Fermer le menu</string>
     <string name="distance_format">%d km</string>
-    <string name="allowance_reason_hint">Client, motif du déplacement</string>
+    <string name="allowance_purpose_hint">Client, motif du déplacement</string>
     <string name="starting_address">Départ</string>
     <string name="arrival_address">Arrivée</string>
     <string name="distance_prompt">Distance&#160;:</string>
@@ -58,7 +58,7 @@
     <string name="year">Année</string>
     <string name="layout_list">List</string>
     <string name="half_day">Demi-journée</string>
-    <string name="invalid_holiday_date">Il n’est pas possible d’ajouter un congé à cette date.</string>
+    <string name="holiday_date_locked">Il n’est plus possible d’ajouter un congé à cette date.</string>
     <string name="gross_salary_label">Salaire brut&#160;:</string>
     <string name="increase_label">Augmentation&#160;:</string>
     <string name="bonus_label">Prime&#160;:</string>
@@ -72,4 +72,14 @@
     <string name="unsupported_type_error">Ce type de fichier n’est pas pris en charge.</string>
     <string name="delete_vehicle_prompt">Supprimer le véhicule&#160;?</string>
     <string name="delete_vehicle_message">Vous ne pourrez plus l’utiliser pour déclarer vos trajets.</string>
+    <string name="vehicle_deleted">Le véhicule a été supprimé.</string>
+    <string name="network_error">La connexion n’est pas disponible.</string>
+    <string name="vehicle_card_saved">Carte grise ajoutée.</string>
+    <string name="allowance_purpose_mandatory_error">Indiquez le motif du déplacement ou le nom du client.</string>
+    <string name="no_vehicle">Aucun véhicule n’est enregistré.</string>
+    <string name="no_allowances">Aucune indemnité kilométrique enregistrée.</string>
+    <string name="no_employee">Aucun salarié n’est enregistré.</string>
+    <string name="no_employee_wages">Aucune paie n’est enregistrée pour ce salarié.</string>
+    <string name="attachment">Justificatif</string>
+    <string name="holiday_wage_warning_format">⚠️ Ce congé sera comptabilisé sur la paie de %s.</string>
 </resources>

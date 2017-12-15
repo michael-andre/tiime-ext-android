@@ -76,6 +76,18 @@ fun holidayTypeLargeIndicator(context: Context, @Holiday.Type type: String?): Dr
     }
 }
 
+fun holidayTypeIndicator(context: Context, @Holiday.Type type: String?): Drawable? {
+    return when (type) {
+        Holiday.TYPE_COMPENSATORY_TIME -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_compensatory_time)
+        Holiday.TYPE_FAMILY_MATTERS -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_family_matters)
+        Holiday.TYPE_PAID_VACATION -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_paid_vacation)
+        Holiday.TYPE_SICK_LEAVE -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_sick_leave)
+        Holiday.TYPE_UNPAID_HOLIDAY -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_unpaid_holiday)
+        Holiday.TYPE_WORK_ACCIDENT -> AppCompatResources.getDrawable(context, R.drawable.holiday_indicator_work_accident)
+        else -> null
+    }
+}
+
 @ColorInt
 fun holidayTypeColor(context: Context, @Holiday.Type type: String?): Int {
     return ContextCompat.getColor(context, when (type) {

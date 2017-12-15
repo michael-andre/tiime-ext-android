@@ -1,6 +1,7 @@
 package com.cubber.tiime.app.wages
 
 import android.app.Dialog
+import android.content.DialogInterface
 import android.os.Bundle
 import android.support.design.widget.BottomSheetBehavior
 import android.support.design.widget.BottomSheetDialog
@@ -12,14 +13,17 @@ import android.view.ViewGroup
 import com.cubber.tiime.databinding.WageHolidayDialogBinding
 import com.cubber.tiime.databinding.WageHolidayDialogItemBinding
 import com.cubber.tiime.model.Holiday
+import com.wapplix.arch.ResultEmitter
+import com.wapplix.arch.result
 import com.wapplix.recycler.BindingListAdapter
+import com.wapplix.withArguments
 import java.util.*
 
 /**
  * Created by mike on 30/10/17.
  */
 
-class WageHolidayFragment : BottomSheetDialogFragment() {
+class HolidayTypePickerFragment : BottomSheetDialogFragment(), ResultEmitter<String?> {
 
     lateinit var binding: WageHolidayDialogBinding
 
@@ -31,6 +35,16 @@ class WageHolidayFragment : BottomSheetDialogFragment() {
 
         val startDate = arguments!!.getSerializable(ARG_START_DATE) as Date
         val duration = arguments!!.getInt(ARG_DURATION)
+
+        val wagePeriod = arguments!!.getSerializable(ARG_WAGE_PERIOD) as Date
+        val cal = Calendar.getInstance()
+        cal.clear()
+        cal.time = startDate
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMinimum(Calendar.DAY_OF_MONTH))
+        if (cal.time != wagePeriod) {
+            binding.wagePeriodWarning = wagePeriod
+        }
+
         binding.duration = duration
         binding.toolbar.title = Wages.getShortDatesSummary(startDate, duration)
 
@@ -46,7 +60,13 @@ class WageHolidayFragment : BottomSheetDialogFragment() {
     }
 
     private fun addHoliday(@Holiday.Type type: String) {
+        result.onResult(type)
         dismiss()
+    }
+
+    override fun onDismiss(dialog: DialogInterface?) {
+        super.onDismiss(dialog)
+        result.onResult(null)
     }
 
     private inner class Adapter : BindingListAdapter<String, WageHolidayDialogItemBinding>() {
@@ -67,17 +87,15 @@ class WageHolidayFragment : BottomSheetDialogFragment() {
 
     companion object {
 
-        private const val ARG_WAGE_ID = "wage_id"
         private const val ARG_START_DATE = "start_date"
         private const val ARG_DURATION = "duration"
+        private const val ARG_WAGE_PERIOD = "period"
 
-        fun newInstance(wageId: Long, startDate: Date, duration: Int): WageHolidayFragment {
-            return WageHolidayFragment().apply {
-                arguments = Bundle().apply {
-                    putLong(ARG_WAGE_ID, wageId)
-                    putSerializable(ARG_START_DATE, startDate)
-                    putInt(ARG_DURATION, duration)
-                }
+        fun newInstance(startDate: Date, duration: Int, wagePeriod: Date): HolidayTypePickerFragment {
+            return HolidayTypePickerFragment().withArguments {
+                putSerializable(ARG_START_DATE, startDate)
+                putInt(ARG_DURATION, duration)
+                putSerializable(ARG_WAGE_PERIOD, wagePeriod)
             }
         }
     }

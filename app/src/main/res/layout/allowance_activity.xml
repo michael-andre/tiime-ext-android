@@ -52,7 +52,7 @@
                 android:layout_marginBottom="@dimen/spacing"
                 android:layout_marginEnd="@dimen/large_spacing"
                 android:layout_marginStart="@dimen/large_spacing"
-                android:hint="@string/allowance_reason_hint"
+                android:hint="@string/allowance_purpose_hint"
                 android:imeOptions="actionDone|flagNoExtractUi"
                 android:inputType="text|textPersonName|textCapSentences"
                 android:maxLines="1"
@@ -132,19 +132,6 @@
                         app:layout_constraintVertical_chainStyle="packed"
                         tools:text="Ma Porsche" />
 
-                    <!--<TextView
-                        android:id="@+id/vehicle_power"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="@{ vehicle != null ? @string/power_format(vehifiscalPowerower) : null }"
-                        android:textAppearance="?android:textAppearanceSmall"
-                        android:textColor="?android:textColorSecondary"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        app:layout_constraintEnd_toEndOf="@id/vehicle_name"
-                        app:layout_constraintStart_toStartOf="@id/vehicle_name"
-                        app:layout_constraintTop_toBottomOf="@+id/vehicle_name"
-                        tools:text="Puissance fiscale : 5" />-->
-
                     <android.support.v4.widget.ContentLoadingProgressBar
                         style="?android:progressBarStyleSmall"
                         android:layout_width="wrap_content"
@@ -192,7 +179,7 @@
                         android:layout_marginTop="@dimen/spacing"
                         android:tint="@android:color/darker_gray"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/arrival_address"
+                        app:layout_constraintTop_toTopOf="@id/to_address"
                         app:layout_goneMarginTop="12dp"
                         app:srcCompat="@drawable/ic_location_24dp" />
 
@@ -206,12 +193,12 @@
                         android:tint="@android:color/darker_gray"
                         android:visibility="gone"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="@id/starting_address"
+                        app:layout_constraintTop_toTopOf="@id/from_address"
                         app:srcCompat="@drawable/ic_location_start_24dp"
                         tools:visibility="visible" />
 
                     <com.wapplix.widget.InstantAutoCompleteTextView
-                        android:id="@+id/starting_address"
+                        android:id="@+id/from_address"
                         style="@style/Widget.EditText.Borderless"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -224,11 +211,11 @@
                         android:imeOptions="actionNext|flagNoExtractUi"
                         android:inputType="text|textPostalAddress|textCapSentences"
                         android:maxLines="2"
-                        android:nextFocusForward="@id/arrival_address"
+                        android:nextFocusForward="@id/to_address"
                         android:text="@={ allowance.fromAddress }"
                         android:textAppearance="?attr/textAppearanceListItemSmall"
                         android:visibility="gone"
-                        app:layout_constraintBottom_toTopOf="@id/arrival_address"
+                        app:layout_constraintBottom_toTopOf="@id/to_address"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toEndOf="@id/location_icon"
                         app:layout_constraintTop_toBottomOf="parent"
@@ -237,7 +224,7 @@
                         tools:visibility="visible" />
 
                     <com.wapplix.widget.InstantAutoCompleteTextView
-                        android:id="@+id/arrival_address"
+                        android:id="@+id/to_address"
                         style="@style/Widget.EditText.Borderless"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -248,40 +235,51 @@
                         android:text="@={ allowance.toAddress }"
                         android:textAppearance="?attr/textAppearanceListItemSmall"
                         android:visibility="gone"
-                        app:layout_constraintBottom_toTopOf="@id/map"
-                        app:layout_constraintEnd_toEndOf="@id/starting_address"
-                        app:layout_constraintStart_toStartOf="@id/starting_address"
-                        app:layout_constraintTop_toBottomOf="@id/starting_address"
+                        app:layout_constraintBottom_toTopOf="@id/map_frame"
+                        app:layout_constraintEnd_toEndOf="@id/from_address"
+                        app:layout_constraintStart_toStartOf="@id/from_address"
+                        app:layout_constraintTop_toBottomOf="@id/from_address"
                         tools:visibility="visible" />
 
-                    <com.google.android.gms.maps.MapView
-                        android:id="@+id/map"
+                    <FrameLayout
+                        android:id="@+id/map_frame"
                         android:layout_width="0dp"
                         android:layout_height="156dp"
                         android:layout_marginBottom="@dimen/small_spacing"
                         android:layout_marginTop="@dimen/small_spacing"
-                        android:background="?colorButtonNormal"
-                        android:visibility="gone"
                         app:layout_constraintBottom_toTopOf="@id/distance"
-                        app:layout_constraintEnd_toEndOf="@id/arrival_address"
-                        app:layout_constraintStart_toStartOf="@id/arrival_address"
-                        app:layout_constraintTop_toBottomOf="@id/arrival_address"
-                        app:liteMode="true"
-                        app:mapType="normal"
-                        tools:visibility="invisible" />
-
-                    <android.support.v4.widget.ContentLoadingProgressBar
-                        android:id="@+id/map_progress"
-                        style="?android:progressBarStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/spacing"
+                        app:layout_constraintEnd_toEndOf="@id/to_address"
                         android:visibility="gone"
-                        app:layout_constraintBottom_toBottomOf="@id/map"
-                        app:layout_constraintEnd_toEndOf="@id/map"
-                        app:layout_constraintStart_toStartOf="@id/map"
-                        app:layout_constraintTop_toTopOf="@id/map"
-                        tools:visibility="visible" />
+                        tools:visibility="visible"
+                        app:layout_constraintStart_toStartOf="@id/to_address"
+                        app:layout_constraintTop_toBottomOf="@id/to_address">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@color/map_background"
+                            android:scaleType="center"
+                            app:srcCompat="@drawable/placeholder_map" />
+
+                        <com.google.android.gms.maps.MapView
+                            android:id="@+id/map"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:liteMode="true"
+                            app:mapType="normal"
+                            android:visibility="invisible"/>
+
+                        <android.support.v4.widget.ContentLoadingProgressBar
+                            android:id="@+id/map_progress"
+                            style="?android:progressBarStyleSmall"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="@dimen/spacing"
+                            android:layout_gravity="end"
+                            android:visibility="gone"
+                            tools:visibility="visible" />
+
+                    </FrameLayout>
 
                     <TextView
                         android:id="@+id/distance_label"
@@ -311,7 +309,7 @@
                         android:textAppearance="?textAppearanceListItem"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toEndOf="@id/distance_label"
-                        app:layout_constraintTop_toBottomOf="@id/map"
+                        app:layout_constraintTop_toBottomOf="@id/map_frame"
                         app:suffix="@string/km_suffix"
                         app:value="@={ allowance.distance }" />
 
@@ -333,7 +331,7 @@
                         android:text="@string/round_trip_abbr"
                         android:visibility="gone"
                         app:layout_constraintBottom_toBottomOf="@id/distance"
-                        app:layout_constraintEnd_toEndOf="@id/map"
+                        app:layout_constraintEnd_toEndOf="@id/map_frame"
                         app:layout_constraintTop_toTopOf="@id/distance"
                         app:switchPadding="@dimen/spacing"
                         tools:visibility="visible" />

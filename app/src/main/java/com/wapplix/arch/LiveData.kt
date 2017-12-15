@@ -1,10 +1,7 @@
 package com.wapplix.arch
 
 import android.arch.core.util.Function
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.LiveDataReactiveStreams
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.Transformations
+import android.arch.lifecycle.*
 import io.reactivex.BackpressureStrategy
 import io.reactivex.Maybe
 import io.reactivex.Observable
@@ -18,7 +15,7 @@ inline fun <T> MutableLiveData<T>.update(block: T.() -> Unit) {
     val value = value
     if (value != null) {
         block(value)
-        this.value = value
+        this.postValue(value)
     }
 }
 
@@ -27,6 +24,12 @@ fun <T> LiveData<T>.singleLoad(): LiveData<T> = SingleLoadData(this)
 fun <T, U> LiveData<T>.switchMap(mapper: (T) -> LiveData<U>?): LiveData<U> {
     return Transformations.switchMap(this, mapper)
 }
+
+inline fun <T> LiveData<T>.observe(owner: LifecycleOwner, crossinline observer: (T?) -> Unit)
+        = observe(owner, Observer { observer.invoke(it) })
+
+inline fun <T> LifecycleOwner.observe(data: LiveData<T>, crossinline observer: (T?) -> Unit)
+        = data.observe(this, observer)
 
 fun <T, U> LiveData<T>.map(mapper: (T) -> U): LiveData<U> {
     return Transformations.map(this, mapper)
@@ -54,7 +57,9 @@ fun <T, U, R> LiveData<T>.cancellingSwitchMap(mapper: (T?) -> R?): LiveData<U> w
     })
 }
 
-interface Cancelable { fun cancel() }
+interface Cancelable {
+    fun cancel()
+}
 
 class SimpleData<T>(value: T) : LiveData<T>() {
     init {

@@ -2,11 +2,8 @@ package com.cubber.tiime.app.mileages
 
 import android.databinding.DataBindingUtil
 import android.databinding.ViewDataBinding
-import android.text.Editable
-import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.EditText
 import android.widget.Filter
 import android.widget.Filterable
 import com.cubber.tiime.R
@@ -50,21 +47,6 @@ class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filtera
         return filter
     }
 
-    fun getQueryWatcher(editText: EditText): TextWatcher {
-        return object : TextWatcher {
-
-            override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
-
-            override fun onTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {}
-
-            override fun afterTextChanged(editable: Editable) {
-                val query = editText.text.toString()
-                filter.filter(query)
-            }
-
-        }
-    }
-
     fun setClients(clients: List<Client>?) {
         this.clients = clients
         filter.notifySourceDataChanged()
@@ -72,14 +54,14 @@ class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filtera
 
     private inner class HintsFilter : Filter() {
 
-        private var mLastQuery: CharSequence? = null
+        private var lastQuery: CharSequence? = null
 
         fun notifySourceDataChanged() {
-            filter(mLastQuery)
+            filter(lastQuery)
         }
 
         override fun performFiltering(query: CharSequence?): Filter.FilterResults {
-            mLastQuery = query
+            lastQuery = query
             val results = Filter.FilterResults()
             val values = ArrayList<Any>()
             val clients = this@AllowanceHintAdapter.clients
@@ -87,7 +69,7 @@ class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filtera
                 if (query == null || query.isEmpty()) {
                     values.addAll(clients)
                 } else {
-                    values.addAll(clients.filterCleaned(query) { c -> arrayOf(c.name, c.directionsAddress) })
+                    values.addAll(clients.filterCleaned(query) { c -> sequenceOf(c.name, c.directionsAddress) })
                 }
             }
             results.count = values.size

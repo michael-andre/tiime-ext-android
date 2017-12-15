@@ -1,69 +1,70 @@
 package com.cubber.tiime.app.mileages
 
-import android.arch.lifecycle.LifecycleOwner
-import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
-import android.arch.lifecycle.Observer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.Filter
 import android.widget.Filterable
 import android.widget.TextView
 import com.cubber.tiime.R
 import com.cubber.tiime.model.Client
 import com.cubber.tiime.utils.filterCleaned
-import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.places.AutocompleteFilter
-import com.google.android.gms.location.places.PlaceLikelihoodBuffer
-import com.google.android.gms.location.places.Places
-import com.wapplix.arch.SingleLiveEvent
-import com.wapplix.arch.cancellingSwitchMap
-import com.wapplix.arch.switchMap
-import com.wapplix.gms.toData
+import com.google.android.gms.location.places.GeoDataClient
+import com.google.android.gms.location.places.Place
 import com.wapplix.widget.ListAdapter
+import io.reactivex.Single
+import io.reactivex.subjects.PublishSubject
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by mike on 28/09/17.
  */
 
-class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: LifecycleOwner) : ListAdapter<LocationHintsAdapter.Item>(), Filterable {
+class LocationHintsAdapter(client: GeoDataClient) : ListAdapter<LocationHintsAdapter.Item>(), Filterable {
 
     private val currentLocation = Item("", null)
     private val filter = HintsFilter()
-    private val mQuery = MutableLiveData<String>()
+    private val query = PublishSubject.create<String>()
 
     private var clients: List<Item>? = null
     private var officeAddress: Item? = null
     private var currentPlaces: List<Item>? = null
     private var autocompletePredictions: List<Item>? = null
 
+    var currentPlacesLoading = false
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
+
     init {
         val autocompleteFilter = AutocompleteFilter.Builder()
                 .setCountry("FR")
                 .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
                 .build()
-        client.switchMap { c ->
-            mQuery.cancellingSwitchMap { query -> Places.GeoDataApi.getAutocompletePredictions(c, query, null, autocompleteFilter).toData() }
-        }.observe(lifecycleOwner, Observer { buffer ->
-            if (buffer?.status?.isSuccess == true) {
-                autocompletePredictions = buffer.map {
-                    Item(
-                            address = it.getFullText(null).toString(),
-                            placeId = it.placeId
-                    )
+        query.debounce(1, TimeUnit.SECONDS)
+                .switchMapSingle { q ->
+                    Single.create<List<Item>> { e ->
+                        client.getAutocompletePredictions(q, null, autocompleteFilter)
+                                .addOnSuccessListener { b ->
+                                    e.onSuccess(b.map {
+                                        Item(address = it.getFullText(null).toString(), placeId = it.placeId)
+                                    })
+                                    b.release()
+                                }
+                    }
                 }
-                filter.notifySourceDataChanged()
-            }
-            buffer?.release()
-        })
+                .subscribe { p ->
+                    autocompletePredictions = p
+                    filter.notifySourceDataChanged()
+                }
     }
 
-    override fun onCreateView(parent: ViewGroup, viewType: Int): View {
-        return LayoutInflater.from(parent.context).inflate(R.layout.support_simple_spinner_dropdown_item, parent, false)
-    }
+    override fun onCreateView(parent: ViewGroup, viewType: Int): View
+            = LayoutInflater.from(parent.context)
+            .inflate(R.layout.support_simple_spinner_dropdown_item, parent, false)
 
     override fun onBindView(view: View, item: Item) {
         val tv = view.findViewById<TextView>(android.R.id.text1)
@@ -74,16 +75,15 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
         }
     }
 
+    override fun areAllItemsEnabled() = !currentPlacesLoading
+
+    override fun isEnabled(position: Int): Boolean =
+            if (getItem(position) === currentLocation) !currentPlacesLoading else true
+
+    fun isCurrentLocationItemPosition(position: Int) = getItem(position) === currentLocation
+
     override fun getFilter(): Filter {
         return filter
-    }
-
-    fun getItemListener(currentPlaceTrigger: SingleLiveEvent<*>): AdapterView.OnItemClickListener {
-        return AdapterView.OnItemClickListener { adapterView, _, position, _ ->
-            if (adapterView.adapter == this@LocationHintsAdapter && currentLocation === getItem(position)) {
-                currentPlaceTrigger.trigger()
-            }
-        }
     }
 
     fun setClients(clients: List<Client>?) {
@@ -95,18 +95,8 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
         filter.notifySourceDataChanged()
     }
 
-    fun setCurrentPlaces(places: PlaceLikelihoodBuffer?) {
-        currentPlaces = places?.map {
-            Item(
-                    address = if (it.place.address.startsWith(it.place.name)) {
-                        it.place.address.toString()
-                    } else {
-                        it.place.name.toString() + ", " + it.place.address
-                    },
-                    placeId = it.place.id
-            )
-        }
-        places?.release()
+    fun setCurrentPlaces(places: List<Item>?) {
+        currentPlaces = places
         filter.notifySourceDataChanged()
     }
 
@@ -129,13 +119,13 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
             if (query == null) return results
             val values = ArrayList<Item>()
             val currentPlaces = this@LocationHintsAdapter.currentPlaces
-            // Always show "Current location"
+            // Always show "Current location", if not already loaded
             if (currentPlaces == null) {
                 values.add(currentLocation)
             }
-            // Show current places if loaded & query is empty (max 3)
+            // Show 3 current places if loaded & query is empty
             if (currentPlaces != null && query.isEmpty()) {
-                values.addAll(if (currentPlaces.size > 3) currentPlaces.subList(0, 3) else currentPlaces)
+                values.addAll(currentPlaces.take(3))
             }
             // Always show office address if loaded & defined
             val officeAddress = this@LocationHintsAdapter.officeAddress
@@ -145,11 +135,11 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
             // Show matching clients from 1 character
             val clients = this@LocationHintsAdapter.clients
             if (query.isNotEmpty() && clients != null) {
-                values.addAll(clients.filterCleaned(query) { c -> arrayOf(c.address) })
+                values.addAll(clients.filterCleaned(query) { c -> sequenceOf(c.address) })
             }
             // Show autocomplete suggestions from 2 characters
             if (query.length > 2) {
-                mQuery.postValue(query.toString())
+                this@LocationHintsAdapter.query.onNext(query.toString())
                 if (autocompletePredictions != null) {
                     values.addAll(autocompletePredictions!!)
                 }
@@ -175,6 +165,17 @@ class LocationHintsAdapter(client: LiveData<GoogleApiClient>, lifecycleOwner: Li
 
     }
 
-    data class Item(var address: String, var placeId: String? = null)
+    data class Item(var address: String, var placeId: String? = null) {
+
+        constructor(place: Place) : this(
+                address = if (place.address.startsWith(place.name)) {
+                    place.address.toString()
+                } else {
+                    place.name.toString() + ", " + place.address
+                },
+                placeId = place.id
+        )
+
+    }
 
 }

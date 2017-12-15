@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <data>
+
+        <import type="com.cubber.tiime.app.wages.Wages" />
+
+        <import
+            alias="res"
+            type="com.cubber.tiime.utils.Resources" />
+
+        <variable
+            name="holiday"
+            type="com.cubber.tiime.model.Holiday" />
+
+        <variable
+            name="summary"
+            type="CharSequence" />
+
+        <variable
+            name="editable"
+            type="boolean" />
+
+    </data>
+
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingBottom="@dimen/spacing"
+        android:paddingEnd="@dimen/large_spacing"
+        android:paddingLeft="@dimen/large_spacing"
+        android:paddingRight="@dimen/spacing"
+        android:paddingStart="@dimen/large_spacing"
+        android:paddingTop="@dimen/spacing">
+
+        <TextView
+            android:id="@+id/date"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/spacing"
+            android:text="@{ summary }"
+            android:textAppearance="?textAppearanceListItem"
+            app:layout_constraintBottom_toTopOf="@id/type"
+            app:layout_constraintEnd_toStartOf="@string/delete"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="13 octobre (2,0 j)" />
+
+        <TextView
+            android:id="@+id/type"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/spacing"
+            android:layout_marginTop="@dimen/small_spacing"
+            android:drawablePadding="@dimen/spacing"
+            android:drawableStart="@{ res.holidayTypeIndicator(context, holiday.type) }"
+            android:text="@{ res.holidayTypeName(context, holiday.type) }"
+            android:textAppearance="?android:textAppearanceSmall"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@string/delete"
+            app:layout_constraintTop_toBottomOf="@id/date"
+            tools:drawableStart="@drawable/holiday_indicator_compensatory_time"
+            tools:ignore="RtlCompat"
+            tools:text="Raison familiale" />
+
+        <Button
+            android:id="@+id/delete"
+            style="?attr/borderlessButtonStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/delete"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:visible="@{ editable }" />
+
+    </android.support.constraint.ConstraintLayout>
+</layout>

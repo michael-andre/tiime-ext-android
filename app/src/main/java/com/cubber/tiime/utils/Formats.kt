@@ -28,7 +28,7 @@ fun dateFormat(pattern: String): DateFormat {
 }
 
 fun monthFormat(): Format {
-    return dateFormat("MMMM yyyy").capitalized()
+    return dateFormat("MMMM yyyy").capitalized().nullSafe()
 }
 
 fun euroSafeFormat(): Format {
