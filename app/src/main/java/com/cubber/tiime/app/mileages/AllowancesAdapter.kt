@@ -1,6 +1,5 @@
 package com.cubber.tiime.app.mileages
 
-import android.arch.paging.PagedList
 import android.content.Context
 import android.databinding.OnRebindCallback
 import android.support.v7.widget.RecyclerView
@@ -36,10 +35,6 @@ class AllowancesAdapter(context: Context) : BindingPagedListAdapter<MileageAllow
 
     init {
         setHasStableIds(true)
-    }
-
-    override fun setList(pagedList: PagedList<MileageAllowance>?) {
-        super.setList(pagedList)
     }
 
     private val mapCallback = OnMapReadyCallback { map ->

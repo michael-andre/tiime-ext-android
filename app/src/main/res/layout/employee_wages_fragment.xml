@@ -7,7 +7,7 @@
 
         <variable
             name="wages"
-            type="android.arch.paging.PagedList" />
+            type="com.wapplix.binding.ObservablePagedList" />
 
     </data>
 

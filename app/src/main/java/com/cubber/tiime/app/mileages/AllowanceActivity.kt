@@ -22,10 +22,7 @@ import com.cubber.tiime.R
 import com.cubber.tiime.app.mileages.vehicles.VehiclePickerFragment
 import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.databinding.AllowanceActivityBinding
-import com.cubber.tiime.model.Associate
-import com.cubber.tiime.model.Client
-import com.cubber.tiime.model.MileageAllowance
-import com.cubber.tiime.model.Vehicle
+import com.cubber.tiime.model.*
 import com.cubber.tiime.utils.*
 import com.google.android.gms.location.places.Places
 import com.google.android.gms.maps.model.LatLng
@@ -36,6 +33,7 @@ import com.wapplix.arch.*
 import com.wapplix.binding.setContentViewBinding
 import com.wapplix.maps.GeoUtils
 import com.wapplix.showSnackbar
+import io.reactivex.android.schedulers.AndroidSchedulers
 import java.util.*
 import kotlin.collections.HashSet
 
@@ -199,7 +197,7 @@ class AllowanceActivity : AppCompatActivity() {
 
             // Bind dates
             val dateFormat = fullDateFormat()
-            binding.dates.text = TextUtils.join("\n", exp?.dates?.map { dateFormat.format(it) })
+            binding.dates.text = TextUtils.join("\n", exp?.tripDates?.map { dateFormat.format(it) })
 
         })
         vm.vehicle.observe(this, Observer { binding.vehicle = it })
@@ -268,7 +266,7 @@ class AllowanceActivity : AppCompatActivity() {
 
         private val repository = DataRepository.of(application)
 
-        val allowanceData = MutableLiveData<MileageAllowance>()
+        val allowanceData = MutableLiveData<MileageAllowanceRequest>()
         val allowance get() = checkNotNull(allowanceData.value)
 
         val associate = repository.associate()
@@ -289,8 +287,8 @@ class AllowanceActivity : AppCompatActivity() {
         var cardProcessing = ProgressData<Vehicle>()
 
         init {
-            val exp = MileageAllowance()
-            exp.dates = TreeSet(setOf(Date()))
+            val exp = MileageAllowanceRequest()
+            exp.tripDates = TreeSet(setOf(Date()))
             allowanceData.value = exp
             associate.observeForever(object : Observer<Associate> {
                 override fun onChanged(a: Associate?) {
@@ -380,6 +378,7 @@ class AllowanceActivity : AppCompatActivity() {
                             vehicle.value?.let { v ->
                                 repository.saveVehicle(v.copy(card = data.data))
                                         .compose(cardProcessing)
+                                        .observeOn(AndroidSchedulers.mainThread())
                                         .subscribe(
                                                 { onUi { showSnackbar(R.string.vehicle_card_saved) } },
                                                 { e -> onUi { showErrorSnackbar(e) } }
@@ -402,8 +401,8 @@ class AllowanceActivity : AppCompatActivity() {
 
         fun showDatesPicker() {
             onUi {
-                DatesPickerFragment.newInstance(allowance.dates).show(supportFragmentManager, "dates_picker") {
-                    allowanceData.update { dates = HashSet(it) }
+                DatesPickerFragment.newInstance(allowance.tripDates).show(supportFragmentManager, "dates_picker") {
+                    allowanceData.update { tripDates = HashSet(it) }
                 }
             }
         }
@@ -418,7 +417,8 @@ class AllowanceActivity : AppCompatActivity() {
         }
 
         internal fun save() =
-                DataRepository.of(getApplication()).saveAllowance(allowance)
+                DataRepository.of(getApplication()).addMileageAllowances(allowance)
+                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
                                 { onUi { finish() } },
                                 { e -> onUi { showErrorSnackbar(e) } }

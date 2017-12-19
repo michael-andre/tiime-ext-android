@@ -13,7 +13,7 @@
 
         <variable
             name="allowance"
-            type="com.cubber.tiime.model.MileageAllowance" />
+            type="com.cubber.tiime.model.MileageAllowanceRequest" />
 
         <variable
             name="vehicle"
@@ -206,11 +206,12 @@
                         android:layout_marginLeft="@dimen/form_spacing"
                         android:layout_marginRight="@dimen/large_spacing"
                         android:layout_marginStart="@dimen/form_spacing"
+                        android:autofillHints="postalAddress"
                         android:completionThreshold="1"
                         android:hint="@string/starting_address"
                         android:imeOptions="actionNext|flagNoExtractUi"
                         android:inputType="text|textPostalAddress|textCapSentences"
-                        android:maxLines="2"
+                        android:maxLines="1"
                         android:nextFocusForward="@id/to_address"
                         android:text="@={ allowance.fromAddress }"
                         android:textAppearance="?attr/textAppearanceListItemSmall"
@@ -228,10 +229,11 @@
                         style="@style/Widget.EditText.Borderless"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:autofillHints="postalAddress"
                         android:hint="@string/arrival_address"
                         android:imeOptions="actionDone|flagNoExtractUi"
                         android:inputType="text|textPostalAddress|textCapSentences"
-                        android:maxLines="2"
+                        android:maxLines="1"
                         android:text="@={ allowance.toAddress }"
                         android:textAppearance="?attr/textAppearanceListItemSmall"
                         android:visibility="gone"
@@ -247,12 +249,12 @@
                         android:layout_height="156dp"
                         android:layout_marginBottom="@dimen/small_spacing"
                         android:layout_marginTop="@dimen/small_spacing"
+                        android:visibility="gone"
                         app:layout_constraintBottom_toTopOf="@id/distance"
                         app:layout_constraintEnd_toEndOf="@id/to_address"
-                        android:visibility="gone"
-                        tools:visibility="visible"
                         app:layout_constraintStart_toStartOf="@id/to_address"
-                        app:layout_constraintTop_toBottomOf="@id/to_address">
+                        app:layout_constraintTop_toBottomOf="@id/to_address"
+                        tools:visibility="visible">
 
                         <ImageView
                             android:layout_width="match_parent"
@@ -265,17 +267,17 @@
                             android:id="@+id/map"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
+                            android:visibility="invisible"
                             app:liteMode="true"
-                            app:mapType="normal"
-                            android:visibility="invisible"/>
+                            app:mapType="normal" />
 
                         <android.support.v4.widget.ContentLoadingProgressBar
                             android:id="@+id/map_progress"
                             style="?android:progressBarStyleSmall"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_margin="@dimen/spacing"
                             android:layout_gravity="end"
+                            android:layout_margin="@dimen/spacing"
                             android:visibility="gone"
                             tools:visibility="visible" />
 

@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.cubber.tiime">
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS"/>
+
     <application
         android:name=".app.TiimeApplication"
         android:allowBackup="true"
@@ -23,12 +29,28 @@
         </activity>
 
         <activity
+            android:name=".app.auth.LoginActivity"
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustResize|stateAlwaysVisible"/>
+
+        <activity
             android:name=".app.mileages.AllowanceActivity"
             android:theme="@style/AppTheme.DialogWhenLarge" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyBjJXiBLBtDPGS9t2mKCOYjqBL3fzuv9Gs" />
+
+        <service android:name=".app.auth.AuthenticationService"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/authenticator"/>
+        </service>
 
     </application>
 

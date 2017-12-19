@@ -1,8 +1,7 @@
 package com.cubber.tiime.app.mileages
 
 import android.app.Application
-import android.arch.paging.DataSource
-import android.arch.paging.LivePagedListProvider
+import android.arch.paging.LivePagedListBuilder
 import android.arch.paging.PagedList
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -12,13 +11,12 @@ import android.view.View
 import android.view.ViewGroup
 import com.cubber.tiime.R
 import com.cubber.tiime.data.DataRepository
-import com.cubber.tiime.data.MileageAllowancesSource
 import com.cubber.tiime.data.PolylineService
 import com.cubber.tiime.databinding.AllowancesFragmentBinding
-import com.cubber.tiime.model.MileageAllowance
 import com.wapplix.arch.UiModel
 import com.wapplix.arch.getUiModel
 import com.wapplix.arch.observe
+import com.wapplix.binding.toObservable
 
 /**
  * Created by mike on 21/09/17.
@@ -42,7 +40,7 @@ class AllowancesFragment : Fragment() {
 
         val vm: VM = getUiModel()
         observe(vm.allowances) {
-            binding.allowances = it
+            binding.allowances = it?.toObservable()
             binding.refreshLayout.isRefreshing = false
         }
         observe(PolylineService.getInstance(context!!).loadingPolylines) {
@@ -54,17 +52,15 @@ class AllowancesFragment : Fragment() {
 
     class VM(application: Application) : UiModel<AllowancesFragment>(application) {
 
-        internal var allowances = object : LivePagedListProvider<Int, MileageAllowance>() {
+        private val dataRepository = DataRepository.of(getApplication())
 
-            override fun createDataSource(): DataSource<Int, MileageAllowance> {
-                return MileageAllowancesSource(application)
-            }
-
-        }.create(null, PagedList.Config.Builder()
-                .setPageSize(20)
-                .setEnablePlaceholders(false)
-                .build()
-        )
+        internal var allowances = LivePagedListBuilder(
+                dataRepository.getMileageAllowances(),
+                PagedList.Config.Builder()
+                        .setPageSize(20)
+                        .setEnablePlaceholders(false)
+                        .build()
+        ).build()
 
     }
 

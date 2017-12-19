@@ -4,6 +4,8 @@ import android.app.Application
 import android.arch.lifecycle.AndroidViewModel
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.support.annotation.IdRes
 import android.support.design.widget.NavigationView
@@ -18,6 +20,7 @@ import android.view.View
 import com.cubber.tiime.R
 import com.cubber.tiime.app.mileages.AllowancesFragment
 import com.cubber.tiime.app.wages.WagesFragment
+import com.cubber.tiime.auth.AuthManager
 import com.cubber.tiime.data.DataRepository
 import com.wapplix.arch.toLiveData
 import kotlinx.android.synthetic.main.main_activity.*
@@ -28,6 +31,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (AuthManager.optAddAccount(this)) {
+            finish()
+            return
+        }
+
         setContentView(R.layout.main_activity)
 
         navigation_view.setNavigationItemSelectedListener(this)
@@ -104,6 +113,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val pendingWages = DataRepository.of(app).employees()
                 .map { list -> list.any { it.wagesValidationRequired } }
                 .toLiveData()
+
+    }
+
+    companion object {
+
+        fun newIntent(context: Context) = Intent(context, MainActivity::class.java)
 
     }
 

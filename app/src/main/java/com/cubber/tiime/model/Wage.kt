@@ -2,8 +2,8 @@ package com.cubber.tiime.model
 
 import android.net.Uri
 import android.support.annotation.StringDef
+import com.cubber.tiime.utils.Month
 import java.math.BigDecimal
-import java.util.*
 
 /**
  * Created by mike on 26/09/17.
@@ -11,7 +11,7 @@ import java.util.*
 
 data class Wage(
         var id: Long = 0,
-        var period: Date? = null,
+        var period: Month? = null,
         var increase: BigDecimal? = null,
         @Status var status: String? = null,
         @SalaryType var increaseType: String? = null,

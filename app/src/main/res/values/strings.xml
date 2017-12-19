@@ -82,4 +82,11 @@
     <string name="no_employee_wages">Aucune paie n’est enregistrée pour ce salarié.</string>
     <string name="attachment">Justificatif</string>
     <string name="holiday_wage_warning_format">⚠️ Ce congé sera comptabilisé sur la paie de %s.</string>
+    <string name="login">Connexion</string>
+    <string name="password">Mot de passe</string>
+    <string name="password_recovery">Mot de passe oublié</string>
+    <string name="invalid_format">Format incorrect</string>
+    <string name="username">Identifiant</string>
+    <string name="login_failed">La connexion a échoué.</string>
+    <string name="invalid_credentials">Identifiants incorrects</string>
 </resources>

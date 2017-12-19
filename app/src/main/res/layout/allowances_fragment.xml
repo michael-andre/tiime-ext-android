@@ -7,7 +7,7 @@
 
         <variable
             name="allowances"
-            type="android.arch.paging.PagedList" />
+            type="com.wapplix.binding.ObservablePagedList" />
 
     </data>
 
@@ -28,6 +28,7 @@
         </android.support.design.widget.AppBarLayout>
 
         <LinearLayout
+            android:id="@+id/empty"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"

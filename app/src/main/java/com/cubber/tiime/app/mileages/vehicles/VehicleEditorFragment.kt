@@ -30,6 +30,7 @@ import com.wapplix.widget.SimpleAdapter
 import com.wapplix.widget.SimpleBindingListAdapter
 import com.wapplix.widget.setPopupMenu
 import com.wapplix.withArguments
+import io.reactivex.android.schedulers.AndroidSchedulers
 
 /**
  * Created by mike on 26/09/17.
@@ -151,6 +152,7 @@ class VehicleEditorFragment : AppCompatDialogFragment() {
         internal fun save() =
                 DataRepository.of(getApplication()).saveVehicle(vehicle.value!!)
                         .doOnEvent { _, _ -> savingState.postValue(false) }
+                        .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(
                                 { onUi { dismiss() } },
                                 { e -> onUi { showErrorSnackbar(e) } }

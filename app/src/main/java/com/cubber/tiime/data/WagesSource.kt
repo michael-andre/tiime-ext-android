@@ -1,61 +1,61 @@
 package com.cubber.tiime.data
 
-import android.arch.paging.KeyedDataSource
-import android.content.Context
+import android.arch.paging.ItemKeyedDataSource
 import com.cubber.tiime.model.Wage
+import com.cubber.tiime.utils.Month
+import com.cubber.tiime.utils.month
 import java.util.*
 
 /**
  * Created by mike on 26/10/17.
  */
 
-class WagesSource(context: Context, private val employeeId: Long) : KeyedDataSource<Date, Wage>() {
+class WagesSource(
+        private val repository: DataRepository,
+        private val employeeId: Long
+) : ItemKeyedDataSource<Month, Wage>() {
 
-    private val context = context.applicationContext
-
-    override fun getKey(wage: Wage): Date {
-        return wage.period ?: throw IllegalStateException("Invalid item: " + wage)
+    override fun getKey(wage: Wage): Month {
+        return wage.period ?: error("Invalid item: " + wage)
     }
 
-    override fun loadInitial(pageSize: Int): List<Wage>? {
+    override fun loadInitial(params: LoadInitialParams<Month>, callback: LoadInitialCallback<Wage>) {
         val cal = Calendar.getInstance()
         cal.set(Calendar.HOUR_OF_DAY, 0)
         cal.set(Calendar.MINUTE, 0)
         cal.set(Calendar.SECOND, 0)
         cal.set(Calendar.MILLISECOND, 0)
         cal.set(Calendar.DAY_OF_MONTH, 1)
-        val to = cal.time
-        cal.add(Calendar.MONTH, -pageSize)
-        val from = cal.time
-        return load(from, to)
+        val to = cal.month
+        cal.add(Calendar.MONTH, -params.requestedLoadSize)
+        val from = cal.month
+        load(from, to, callback)
     }
 
-    override fun loadAfter(currentEndKey: Date, pageSize: Int): List<Wage>? {
+    override fun loadAfter(params: LoadParams<Month>, callback: LoadCallback<Wage>) {
         val cal = Calendar.getInstance()
-        cal.time = currentEndKey
+        cal.time = params.key
         cal.add(Calendar.MONTH, -1)
-        val to = cal.time
-        cal.add(Calendar.MONTH, -pageSize)
-        val from = cal.time
-        return load(from, to)
+        val to = cal.month
+        cal.add(Calendar.MONTH, -params.requestedLoadSize)
+        val from = cal.month
+        load(from, to, callback)
     }
 
-    override fun loadBefore(currentBeginKey: Date, pageSize: Int): List<Wage>? {
+    override fun loadBefore(params: LoadParams<Month>, callback: LoadCallback<Wage>) {
         val cal = Calendar.getInstance()
-        cal.time = currentBeginKey
+        cal.time = params.key
         cal.add(Calendar.MONTH, 1)
-        val from = cal.time
-        cal.add(Calendar.MONTH, pageSize)
-        val to = cal.time
-        return load(from, to).reversed()
+        val from = cal.month
+        cal.add(Calendar.MONTH, params.requestedLoadSize)
+        val to = cal.month
+        load(from, to, callback)
     }
 
-    private fun load(from: Date, to: Date): List<Wage> {
-        val wages = DataRepository.of(context).getEmployeeWages(employeeId, from, to).blockingFirst()
-        DataRepository.of(context).wagesUpdate.firstElement().subscribe {
-            invalidate()
+    private fun load(from: Month, to: Month, callback: LoadCallback<Wage>) {
+        repository.getEmployeeWages(employeeId, from, to).subscribe { list, e ->
+            if (list != null) callback.onResult(list)
         }
-        return wages
     }
 
 }

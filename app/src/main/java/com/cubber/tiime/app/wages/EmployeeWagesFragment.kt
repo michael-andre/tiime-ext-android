@@ -2,8 +2,7 @@ package com.cubber.tiime.app.wages
 
 import android.app.Application
 import android.arch.lifecycle.LiveData
-import android.arch.paging.DataSource
-import android.arch.paging.LivePagedListProvider
+import android.arch.paging.LivePagedListBuilder
 import android.arch.paging.PagedList
 import android.os.Bundle
 import android.support.design.widget.Snackbar
@@ -14,7 +13,6 @@ import android.view.View
 import android.view.ViewGroup
 import com.cubber.tiime.R
 import com.cubber.tiime.data.DataRepository
-import com.cubber.tiime.data.WagesSource
 import com.cubber.tiime.databinding.EmployeeWagesFragmentBinding
 import com.cubber.tiime.model.Holiday
 import com.cubber.tiime.model.Wage
@@ -24,8 +22,10 @@ import com.wapplix.arch.UiModel
 import com.wapplix.arch.getUiModel
 import com.wapplix.arch.observe
 import com.wapplix.arch.show
+import com.wapplix.binding.toObservable
 import com.wapplix.recycler.AutoGridLayoutManager
 import com.wapplix.showSnackbar
+import io.reactivex.android.schedulers.AndroidSchedulers
 import java.util.*
 
 /**
@@ -59,7 +59,7 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
         vm.init(employeeId)
 
         observe(vm.wages) {
-            binding.wages = it
+            binding.wages = it?.toObservable()
             binding.refreshLayout.isRefreshing = false
         }
 
@@ -104,17 +104,13 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
         fun init(employeeId: Long) {
             this.employeeId = employeeId
             if (!this@VM::wages.isInitialized) {
-                wages = object : LivePagedListProvider<Date, Wage>() {
-
-                    override fun createDataSource(): DataSource<Date, Wage> {
-                        return WagesSource(getApplication(), employeeId)
-                    }
-
-                }.create(null, PagedList.Config.Builder()
-                        .setPageSize(6)
-                        .setEnablePlaceholders(false)
-                        .build()
-                )
+                wages = LivePagedListBuilder(
+                        dataRepository.getEmployeeWagesSource(employeeId),
+                        PagedList.Config.Builder()
+                                .setPageSize(6)
+                                .setEnablePlaceholders(false)
+                                .build()
+                ).build()
             }
         }
 
@@ -125,6 +121,7 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
                             if (type == null) return@show
                             val holiday = Holiday(startDate = startDate, duration = duration, type = type)
                             dataRepository.addEmployeeWagesHoliday(employeeId, wage.id, holiday)
+                                    .observeOn(AndroidSchedulers.mainThread())
                                     .subscribe(
                                             {},
                                             { e -> onUi { showErrorSnackbar(e) } }
@@ -136,6 +133,7 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
 
         fun deleteHoliday(wageId: Long, holidayId: Long) {
             dataRepository.deleteEmployeeWageHoliday(employeeId, wageId, holidayId)
+                    .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             {},
                             { e -> onUi { showErrorSnackbar(e) } }

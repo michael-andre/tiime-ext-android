@@ -19,6 +19,7 @@ import com.wapplix.arch.*
 import com.wapplix.recycler.BindingListAdapter
 import com.wapplix.showSnackbar
 import com.wapplix.widget.setOverflowPopupMenu
+import io.reactivex.android.schedulers.AndroidSchedulers
 
 /**
  * Created by mike on 26/09/17.
@@ -96,6 +97,7 @@ class VehiclePickerFragment : AppCompatDialogFragment(), ResultEmitter<Long>, Di
                         tag = "delete_vehicle"
                 ) {
                     DataRepository.of(getApplication()).deleteVehicle(id)
+                            .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(
                                     { onUi { showSnackbar(R.string.vehicle_deleted) } },
                                     { e -> onUi { showErrorSnackbar(e) } }

@@ -1,16 +1,18 @@
 package com.cubber.tiime.data
 
+import com.cubber.tiime.api.TiimeDataService
 import com.cubber.tiime.model.*
+import com.cubber.tiime.utils.Month
+import com.cubber.tiime.utils.toMonth
 import io.reactivex.Completable
 import io.reactivex.Single
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * Created by mike on 05/12/17.
  */
-object FakeApiService : TiimeApiService {
+object DataServiceStub : TiimeDataService {
 
     override fun getAssociate(): Single<Associate> =
             Single.fromCallable {
@@ -25,16 +27,25 @@ object FakeApiService : TiimeApiService {
                 MileageAllowancesList(mileageAllowances.subList(fromIndex, toIndex).toList())
             }
 
-    override fun addAssociateMileage(mileageAllowance: MileageAllowance): Single<MileageAllowance> =
+    override fun addAssociateMileages(mileageAllowance: MileageAllowanceRequest): Single<List<MileageAllowance>> =
             Single.fromCallable {
-                val copy = mileageAllowance.copy(
-                        id = (mileageAllowances.map { it.id }.max() ?: 0) + 1
-                )
+                val items = mileageAllowance.tripDates.orEmpty().map { date ->
+                    MileageAllowance(
+                            id = (mileageAllowances.map { it.id }.max() ?: 0) + 1,
+                            comment = mileageAllowance.comment,
+                            distance = mileageAllowance.distance,
+                            fromAddress = mileageAllowance.fromAddress,
+                            toAddress = mileageAllowance.toAddress,
+                            polyline = mileageAllowance.polyline,
+                            purpose = mileageAllowance.purpose,
+                            tripDate = date
+                    )
+                }
                 mileageAllowances = mileageAllowances.asSequence()
-                        .plus(copy)
-                        .sortedByDescending { it.dates?.max() }
+                        .plus(items)
+                        .sortedByDescending { it.tripDate }
                         .toList()
-                copy
+                items
             }
 
     override fun deleteAssociateMileage(id: Long): Completable =
@@ -85,7 +96,7 @@ object FakeApiService : TiimeApiService {
                 EmployeesList(employees.toList())
             }
 
-    override fun getEmployeeWages(id: Long, from: Date?, to: Date?): Single<WagesList> =
+    override fun getEmployeeWages(id: Long, from: Month?, to: Month?): Single<WagesList> =
             Single.fromCallable {
                 WagesList(wages[id]?.filter { w ->
                     (from == null || !w.period!!.before(from))
@@ -149,24 +160,24 @@ object FakeApiService : TiimeApiService {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd")
         mutableMapOf(
                 1L to listOf(
-                        Wage(id = 110, period = dateFormat.parse("2017-10-01"), holidays = listOf(
+                        Wage(id = 110, period = dateFormat.parse("2017-10-01").toMonth(), holidays = listOf(
                                 Holiday(id = 1101, startDate = dateFormat.parse("2017-10-25"), type = Holiday.TYPE_FAMILY_MATTERS, duration = 1),
                                 Holiday(id = 1102, startDate = dateFormat.parse("2017-10-14"), type = Holiday.TYPE_SICK_LEAVE, duration = 4),
                                 Holiday(id = 1103, startDate = dateFormat.parse("2017-10-20"), type = Holiday.TYPE_UNPAID_HOLIDAY, duration = 6)
                         ), status = Wage.STATUS_VALIDATION_REQUIRED, increase = BigDecimal("300"), increaseType = Wage.SALARY_TYPE_GROSS),
-                        Wage(id = 109, period = dateFormat.parse("2017-09-01"), holidays = listOf(
+                        Wage(id = 109, period = dateFormat.parse("2017-09-01").toMonth(), holidays = listOf(
                                 Holiday(id = 1091, startDate = dateFormat.parse("2017-09-12"), type = Holiday.TYPE_FAMILY_MATTERS, duration = 1),
                                 Holiday(id = 1092, startDate = dateFormat.parse("2017-09-09"), type = Holiday.TYPE_COMPENSATORY_TIME, duration = 6),
                                 Holiday(id = 1093, startDate = dateFormat.parse("2017-09-20"), type = Holiday.TYPE_PAID_VACATION, duration = 10)
                         ), status = Wage.STATUS_VALIDATED, comment = "Commentaire sur ce mois"),
-                        Wage(id = 108, period = dateFormat.parse("2017-08-01"), holidays = listOf(
+                        Wage(id = 108, period = dateFormat.parse("2017-08-01").toMonth(), holidays = listOf(
                                 Holiday(id = 1081, startDate = dateFormat.parse("2017-08-03"), type = Holiday.TYPE_PAID_VACATION, duration = 4),
                                 Holiday(id = 1082, startDate = dateFormat.parse("2017-08-06"), type = Holiday.TYPE_SICK_LEAVE, duration = 2),
                                 Holiday(id = 1083, startDate = dateFormat.parse("2017-08-10"), type = Holiday.TYPE_WORK_ACCIDENT, duration = 1),
                                 Holiday(id = 1084, startDate = dateFormat.parse("2017-08-11"), type = Holiday.TYPE_COMPENSATORY_TIME, duration = 3),
                                 Holiday(id = 1085, startDate = dateFormat.parse("2017-08-20"), type = Holiday.TYPE_PAID_VACATION, duration = 12)
                         ), status = Wage.STATUS_LOCKED, bonus = BigDecimal("5000"), bonusType = Wage.SALARY_TYPE_NET),
-                        Wage(id = 107, period = dateFormat.parse("2017-07-01"), holidays = listOf(), status = Wage.STATUS_LOCKED, comment = "Oups")
+                        Wage(id = 107, period = dateFormat.parse("2017-07-01").toMonth(), holidays = listOf(), status = Wage.STATUS_LOCKED, comment = "Oups")
                 )
         )
     }()
@@ -180,13 +191,13 @@ object FakeApiService : TiimeApiService {
                         fromAddress = "48, rue de Provence, Paris",
                         toAddress = "82, rue Beaubourg, Paris",
                         distance = 30,
-                        dates = setOf(dateFormat.parse("2017-08-14"))
+                        tripDate = dateFormat.parse("2017-08-14")
                 ),
                 MileageAllowance(
                         id = 0,
                         purpose = "Visite client",
                         distance = 250,
-                        dates = setOf(dateFormat.parse("2017-08-12"))
+                        tripDate = dateFormat.parse("2017-08-12")
                 )
         )
     }()

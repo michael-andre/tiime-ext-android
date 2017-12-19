@@ -83,7 +83,7 @@
                 android:layout_marginBottom="@dimen/spacing"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="@{ f.fullDateFormat.format(allowance.dates.iterator().next()) }"
+                android:text="@{ f.fullDateFormat.format(allowance.tripDate) }"
                 android:textAppearance="?android:textAppearanceSmall"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/purpose"
