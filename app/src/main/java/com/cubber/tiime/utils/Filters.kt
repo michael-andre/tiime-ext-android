@@ -8,19 +8,15 @@ import java.text.Normalizer
 
 object Filters {
 
-    fun clean(input: CharSequence?): String? {
-        return Normalizer.normalize(input, Normalizer.Form.NFD)
-                .replace("[\\p{InCombiningDiacriticalMarks}]".toRegex(), "")
-                .toLowerCase()
-    }
+    private val diacritics = "[\\p{InCombiningDiacriticalMarks}]".toRegex()
 
-    fun <T> filter(collection: Collection<T>, query: String, mapper: (T) -> Iterable<String?>): Collection<T> {
-        val cleanQuery = clean(query)
-        if (cleanQuery?.isEmpty() != false) return emptyList()
-        return collection.filter {
-            mapper(it)
-                    .map { clean(it) }
-                    .any { s -> s?.contains(cleanQuery) ?: false }
+    fun clean(input: CharSequence?): String? {
+        return if (input != null) {
+            Normalizer.normalize(input, Normalizer.Form.NFD)
+                    .replace(diacritics, "")
+                    .toLowerCase()
+        } else {
+            null
         }
     }
 

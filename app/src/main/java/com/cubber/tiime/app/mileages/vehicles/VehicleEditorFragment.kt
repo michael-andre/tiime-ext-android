@@ -45,7 +45,7 @@ class VehicleEditorFragment : AppCompatDialogFragment() {
         get() = arguments?.getLong(ARG_VEHICLE_ID)
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        binding = VehicleEditorBinding.inflate(LayoutInflater.from(context))
+        binding = VehicleEditorBinding.inflate(LayoutInflater.from(context))!!
 
         binding.type.adapter = SimpleBindingListAdapter<String>(
                 context!!,

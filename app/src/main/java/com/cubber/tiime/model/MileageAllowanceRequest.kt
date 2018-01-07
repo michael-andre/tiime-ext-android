@@ -12,7 +12,7 @@ data class MileageAllowanceRequest(
         var toAddress: String? = null,
         var purpose: String? = null,
         var distance: Int? = null,
-        var tripDates: Set<Date>? = null,
+        var dates: Set<Date>? = null,
         var comment: String? = null,
         var roundTrip: Boolean? = null,
         var polyline: List<LatLng>? = null

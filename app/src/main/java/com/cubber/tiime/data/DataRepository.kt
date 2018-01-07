@@ -3,9 +3,11 @@ package com.cubber.tiime.data
 import android.accounts.Account
 import android.arch.lifecycle.LiveData
 import android.arch.paging.DataSource
+import android.content.ContentResolver
 import android.content.Context
 import android.util.Log
 import com.cubber.tiime.api.ApiServiceBuilder
+import com.cubber.tiime.api.retrofit.UriContentBody
 import com.cubber.tiime.auth.AuthManager
 import com.cubber.tiime.model.*
 import com.cubber.tiime.utils.Month
@@ -19,7 +21,10 @@ import io.reactivex.subjects.PublishSubject
  * Created by mike on 26/09/17.
  */
 
-class DataRepository(accessToken: String) {
+class DataRepository(
+        accessToken: String,
+        private val contentResolver: ContentResolver
+) {
 
     val vehiclesUpdate = PublishSubject.create<Iterable<Vehicle>>()
     val allowancesUpdate = PublishSubject.create<Iterable<MileageAllowance>>()
@@ -41,24 +46,35 @@ class DataRepository(accessToken: String) {
                     .replay(1)
                     .autoConnect()
 
-    fun vehicles() =
+    fun activeVehicles() =
             vehiclesUpdate.mapUpdates {
-                apiService.getAssociate().map { it.vehicles }
+                apiService.getAssociate()
+                        .map { it.vehicles.filter { it.deletionDate == null  } }
             }
 
     fun associate(): LiveData<Associate> = apiService.getAssociate().toLiveData()
 
     fun vehicle(id: Long) =
             vehiclesUpdate.mapUpdates {
-                apiService.getAssociate().map { it.vehicles.first { it.id == id } }
+                apiService.getAssociate()
+                        .map { it.vehicles.first { it.id == id } }
             }
 
     fun saveVehicle(vehicle: Vehicle): Single<Vehicle> {
         return if (vehicle.id > 0L) {
-            apiService.updateAssociateVehicle(vehicle.id, vehicle)
+            apiService.updateAssociateVehicle(
+                    vehicle.id,
+                    name = vehicle.name,
+                    card = vehicle.card?.let { card -> UriContentBody(contentResolver, card) }
+            ).doOnSuccess { v -> vehiclesUpdate.onNext(listOf(v)) }
         } else {
-            apiService.addAssociateVehicle(vehicle)
-        }.doOnSuccess { v -> vehiclesUpdate.onNext(listOf(v)) }
+            apiService.addAssociateVehicle(
+                    name = vehicle.name!!,
+                    type = vehicle.type!!,
+                    fiscalPower = vehicle.fiscalPower!!,
+                    card = vehicle.card?.let { card -> UriContentBody(contentResolver, card) }
+            ).doOnSuccess { v -> vehiclesUpdate.onNext(listOf(v)) }
+        }
     }
 
     fun deleteVehicle(id: Long): Completable =
@@ -91,8 +107,13 @@ class DataRepository(accessToken: String) {
                     .doOnComplete { wagesUpdate.onNext(emptyList()) }
 
     fun addEmployeeWagesHoliday(employeeId: Long, wageId: Long, holiday: Holiday) =
-            apiService.addEmployeeWageHoliday(employeeId, wageId, holiday)
-                    .doOnSuccess { wagesUpdate.onNext(emptyList()) }
+            apiService.addEmployeeWageHoliday(
+                    employeeId,
+                    wageId,
+                    startDate = holiday.startDate!!,
+                    type = holiday.type!!,
+                    duration = holiday.duration
+            ).doOnSuccess { wagesUpdate.onNext(emptyList()) }
 
     fun getMileageAllowances(start: Int = 0, count: Int?): Single<List<MileageAllowance>> =
             apiService.getAssociateMileages(start, count)
@@ -102,9 +123,18 @@ class DataRepository(accessToken: String) {
         MileageAllowancesSource(this)
     }
 
-    fun addMileageAllowances(allowanceRequest: MileageAllowanceRequest) =
-            apiService.addAssociateMileages(allowanceRequest)
-                    .doAfterSuccess { a -> allowancesUpdate.onNext(a) }
+    fun addMileageAllowances(allowanceRequest: MileageAllowanceRequest): Single<List<MileageAllowance>> =
+            apiService.addAssociateMileages(
+                    vehicleId = allowanceRequest.vehicleId,
+                    purpose = allowanceRequest.purpose!!,
+                    dates = allowanceRequest.dates!!,
+                    distance = allowanceRequest.distance!!,
+                    fromAddress = allowanceRequest.fromAddress,
+                    toAddress = allowanceRequest.toAddress,
+                    comment = allowanceRequest.comment,
+                    roundTrip = allowanceRequest.roundTrip,
+                    polyline = allowanceRequest.polyline
+            ).doAfterSuccess { a -> allowancesUpdate.onNext(a) }
 
     companion object {
 
@@ -112,7 +142,7 @@ class DataRepository(accessToken: String) {
 
         fun of(context: Context, account: String? = null): DataRepository {
             val active = AuthManager.getActiveAccount(context) ?: error("No default account")
-            return repositories.getOrPut(active) { DataRepository(AuthManager.getAccessToken(context, active)) }
+            return repositories.getOrPut(active) { DataRepository(AuthManager.getAccessToken(context, active), context.contentResolver) }
         }
     }
 

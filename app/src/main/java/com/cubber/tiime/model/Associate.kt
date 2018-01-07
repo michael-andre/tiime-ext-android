@@ -6,7 +6,6 @@ package com.cubber.tiime.model
 
 data class Associate(
         var id: Long = 0,
-        var name: String? = null,
         var defaultFromAddress: String? = null,
         var defaultVehicleId: Long? = null,
         var vehicles: List<Vehicle>

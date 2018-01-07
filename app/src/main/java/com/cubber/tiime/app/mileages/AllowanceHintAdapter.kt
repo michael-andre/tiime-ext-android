@@ -32,7 +32,7 @@ class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filtera
     }
 
     override fun onCreateViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): ViewDataBinding {
-        return DataBindingUtil.inflate(inflater, viewType, parent, false)
+        return DataBindingUtil.inflate(inflater, viewType, parent, false)!!
     }
 
     override fun onBindView(binding: ViewDataBinding, item: Any) {

@@ -197,7 +197,7 @@ class AllowanceActivity : AppCompatActivity() {
 
             // Bind dates
             val dateFormat = fullDateFormat()
-            binding.dates.text = TextUtils.join("\n", exp?.tripDates?.map { dateFormat.format(it) })
+            binding.dates.text = TextUtils.join("\n", exp?.dates?.map { dateFormat.format(it) })
 
         })
         vm.vehicle.observe(this, Observer { binding.vehicle = it })
@@ -271,7 +271,7 @@ class AllowanceActivity : AppCompatActivity() {
 
         val associate = repository.associate()
 
-        val vehicles = repository.vehicles().toLiveData()
+        val vehicles = repository.activeVehicles().toLiveData()
         val vehicle = MediatorLiveData<Vehicle>().apply {
             val select = {
                 vehicles.value?.let {
@@ -288,7 +288,7 @@ class AllowanceActivity : AppCompatActivity() {
 
         init {
             val exp = MileageAllowanceRequest()
-            exp.tripDates = TreeSet(setOf(Date()))
+            exp.dates = TreeSet(setOf(Date()))
             allowanceData.value = exp
             associate.observeForever(object : Observer<Associate> {
                 override fun onChanged(a: Associate?) {
@@ -401,8 +401,8 @@ class AllowanceActivity : AppCompatActivity() {
 
         fun showDatesPicker() {
             onUi {
-                DatesPickerFragment.newInstance(allowance.tripDates).show(supportFragmentManager, "dates_picker") {
-                    allowanceData.update { tripDates = HashSet(it) }
+                DatesPickerFragment.newInstance(allowance.dates).show(supportFragmentManager, "dates_picker") {
+                    allowanceData.update { dates = HashSet(it) }
                 }
             }
         }

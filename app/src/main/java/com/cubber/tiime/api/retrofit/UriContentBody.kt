@@ -24,14 +24,12 @@ class UriContentBody(private val contentResolver: ContentResolver, private val u
         val projection = arrayOf(OpenableColumns.SIZE, OpenableColumns.DISPLAY_NAME)
         val infoCursor = contentResolver.query(uri, projection, null, null, null)
         if (infoCursor != null) {
-            try {
+            infoCursor.use {
                 val sizeIndex = infoCursor.getColumnIndex(OpenableColumns.SIZE)
                 val nameIndex = infoCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
                 infoCursor.moveToFirst()
                 filename = infoCursor.getString(nameIndex)
                 contentLength = if (!infoCursor.isNull(sizeIndex)) infoCursor.getLong(sizeIndex) else -1
-            } finally {
-                infoCursor.close()
             }
         } else {
             val f = File(uri.path)

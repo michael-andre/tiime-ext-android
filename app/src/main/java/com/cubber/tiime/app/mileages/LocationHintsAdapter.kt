@@ -62,8 +62,7 @@ class LocationHintsAdapter(client: GeoDataClient) : ListAdapter<LocationHintsAda
                 }
     }
 
-    override fun onCreateView(parent: ViewGroup, viewType: Int): View
-            = LayoutInflater.from(parent.context)
+    override fun onCreateView(parent: ViewGroup, viewType: Int): View = LayoutInflater.from(parent.context)
             .inflate(R.layout.support_simple_spinner_dropdown_item, parent, false)
 
     override fun onBindView(view: View, item: Item) {
@@ -87,11 +86,11 @@ class LocationHintsAdapter(client: GeoDataClient) : ListAdapter<LocationHintsAda
     }
 
     fun setClients(clients: List<Client>?) {
-        this.clients = clients?.map {
-            Item(
-                    address = it.name + ", " + it.directionsAddress
-            )
-        }
+        this.clients = clients
+                ?.filter { !it.directionsAddress.isNullOrBlank() }
+                ?.map {
+                    Item(address = it.name + ", " + it.directionsAddress)
+                }
         filter.notifySourceDataChanged()
     }
 

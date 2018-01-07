@@ -25,7 +25,7 @@ abstract class BindingListAdapter<T, VDB : ViewDataBinding, DropDownVDB : ViewDa
     abstract fun onCreateViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): VDB
 
     override fun onBindView(view: View, item: T) {
-        val binding = DataBindingUtil.getBinding<VDB>(view)
+        val binding = DataBindingUtil.getBinding<VDB>(view) ?: error("Binding not found")
         onBindView(binding, item)
         binding.executePendingBindings()
     }
@@ -39,7 +39,7 @@ abstract class BindingListAdapter<T, VDB : ViewDataBinding, DropDownVDB : ViewDa
     abstract fun onCreateDropDownViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): DropDownVDB
 
     override fun onBindDropDownView(view: View, item: T) {
-        val binding = DataBindingUtil.getBinding<DropDownVDB>(view)
+        val binding = DataBindingUtil.getBinding<DropDownVDB>(view) ?: error("Binding not found")
         onBindDropDownView(binding, item)
         binding.executePendingBindings()
     }

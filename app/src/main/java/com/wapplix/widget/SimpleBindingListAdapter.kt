@@ -19,7 +19,7 @@ class SimpleBindingListAdapter<T> @JvmOverloads constructor(
 ) : BindingListAdapter<T, ViewDataBinding, ViewDataBinding>(context) {
 
     override fun onCreateViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): ViewDataBinding {
-        return DataBindingUtil.inflate(inflater, viewResource, parent, false)
+        return DataBindingUtil.inflate(inflater, viewResource, parent, false)!!
     }
 
     override fun onBindView(binding: ViewDataBinding, item: T) {
@@ -27,7 +27,7 @@ class SimpleBindingListAdapter<T> @JvmOverloads constructor(
     }
 
     override fun onCreateDropDownViewBinding(inflater: LayoutInflater, parent: ViewGroup, viewType: Int): ViewDataBinding {
-        return DataBindingUtil.inflate(inflater, dropDownViewResource, parent, false)
+        return DataBindingUtil.inflate(inflater, dropDownViewResource, parent, false)!!
     }
 
     override fun onBindDropDownView(binding: ViewDataBinding, item: T) {

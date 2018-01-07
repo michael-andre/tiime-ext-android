@@ -31,7 +31,7 @@ class VehiclePickerFragment : AppCompatDialogFragment(), ResultEmitter<Long>, Di
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
 
-        val binding = VehiclePickerBinding.inflate(LayoutInflater.from(context))
+        val binding = VehiclePickerBinding.inflate(LayoutInflater.from(context))!!
         binding.list.adapter = VehiclesAdapter()
 
         vm = getUiModel()
@@ -85,7 +85,7 @@ class VehiclePickerFragment : AppCompatDialogFragment(), ResultEmitter<Long>, Di
 
     class VM(application: Application) : UiModel<VehiclePickerFragment>(application) {
 
-        internal var vehicles = DataRepository.of(getApplication()).vehicles().toLiveData()
+        internal var vehicles = DataRepository.of(getApplication()).activeVehicles().toLiveData()
 
         internal fun deleteVehicle(id: Long) {
             onUi {

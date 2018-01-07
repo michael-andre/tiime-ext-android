@@ -1,13 +1,17 @@
 package com.cubber.tiime.data
 
 import com.cubber.tiime.api.TiimeDataService
+import com.cubber.tiime.api.retrofit.CommaSeparated
 import com.cubber.tiime.model.*
 import com.cubber.tiime.utils.Month
 import com.cubber.tiime.utils.toMonth
+import com.google.android.gms.maps.model.LatLng
 import io.reactivex.Completable
 import io.reactivex.Single
+import okhttp3.RequestBody
 import java.math.BigDecimal
 import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Created by mike on 05/12/17.
@@ -23,22 +27,34 @@ object DataServiceStub : TiimeDataService {
             Single.fromCallable {
                 val fromIndex = offset ?: 0
                 if (fromIndex >= mileageAllowances.size) return@fromCallable MileageAllowancesList(emptyList())
-                val toIndex = minOf((offset ?: 0) + (limit ?: Int.MAX_VALUE), mileageAllowances.size)
+                val toIndex = minOf((offset ?: 0) + (limit
+                        ?: Int.MAX_VALUE), mileageAllowances.size)
                 MileageAllowancesList(mileageAllowances.subList(fromIndex, toIndex).toList())
             }
 
-    override fun addAssociateMileages(mileageAllowance: MileageAllowanceRequest): Single<List<MileageAllowance>> =
+    override fun addAssociateMileages(
+            vehicleId: Long,
+            purpose: String,
+            distance: Int,
+            @CommaSeparated dates: Set<Date>,
+            fromAddress: String?,
+            toAddress: String?,
+            comment: String?,
+            roundTrip: Boolean?,
+            polyline: List<LatLng>?
+    ): Single<List<MileageAllowance>> =
             Single.fromCallable {
-                val items = mileageAllowance.tripDates.orEmpty().map { date ->
+                val items = dates.map { date ->
                     MileageAllowance(
                             id = (mileageAllowances.map { it.id }.max() ?: 0) + 1,
-                            comment = mileageAllowance.comment,
-                            distance = mileageAllowance.distance,
-                            fromAddress = mileageAllowance.fromAddress,
-                            toAddress = mileageAllowance.toAddress,
-                            polyline = mileageAllowance.polyline,
-                            purpose = mileageAllowance.purpose,
-                            tripDate = date
+                            purpose = purpose,
+                            distance = distance,
+                            tripDate = date,
+                            fromAddress = fromAddress,
+                            toAddress = toAddress,
+                            comment = comment,
+                            roundTrip2 = roundTrip,
+                            polyline = polyline
                     )
                 }
                 mileageAllowances = mileageAllowances.asSequence()
@@ -53,23 +69,38 @@ object DataServiceStub : TiimeDataService {
                 mileageAllowances = mileageAllowances.minus(mileageAllowances.filter { it.id == id })
             }
 
-    override fun addAssociateVehicle(vehicle: Vehicle): Single<Vehicle> =
+    override fun addAssociateVehicle(
+            name: String,
+            type: String,
+            fiscalPower: String,
+            card: RequestBody?
+    ): Single<Vehicle> =
             Single.fromCallable {
-                val copy = vehicle.copy(
-                        id = (me.vehicles.map { it.id }.max() ?: 0) + 1
+                val new = Vehicle(
+                        id = (me.vehicles.map { it.id }.max() ?: 0) + 1,
+                        name = name,
+                        type = type,
+                        fiscalPower = fiscalPower,
+                        card = null
                 )
                 me = me.copy(
                         vehicles = me.vehicles.asSequence()
-                                .plus(copy)
+                                .plus(new)
                                 .sortedBy { it.name }
                                 .toList()
                 )
-                copy
+                new
             }
 
-    override fun updateAssociateVehicle(id: Long, vehicle: Vehicle): Single<Vehicle> =
-            Single.fromCallable {
-                val copy = vehicle.copy(id = id)
+    override fun updateAssociateVehicle(
+            id: Long,
+            name: String?,
+            card: RequestBody?
+    ): Single<Vehicle> =
+            getAssociate().map { associate: Associate ->
+                val copy = associate.vehicles.first { it.id == id }.copy()
+                if (name != null) copy.name = name
+                if (card != null) copy.card = null
                 me = me.copy(
                         vehicles = me.vehicles.asSequence()
                                 .map { if (it.id == id) copy else it }
@@ -104,30 +135,62 @@ object DataServiceStub : TiimeDataService {
                 } ?: emptyList())
             }
 
+    override fun updateEmployeeWage(
+            employeeId: Long,
+            id: Long,
+            status: String?,
+            increase: BigDecimal?,
+            increaseType: String?,
+            bonus: BigDecimal?,
+            bonusType: String?,
+            comment: String?,
+            attachment: RequestBody?
+    ): Single<Wage> = Single.fromCallable {
+        val copy = wages[employeeId]!!.first { it.id == id }.copy()
+        if (status != null) copy.status = status
+        if (increase != null) copy.increase = increase
+        if (increaseType != null) copy.increaseType = increaseType
+        if (bonus != null) copy.bonus = bonus
+        if (bonusType != null) copy.bonusType = bonusType
+        if (comment != null) copy.comment = comment
+        if (attachment != null) copy.attachment = null
+        wages[employeeId] = wages[employeeId]!!.map { if (it.id == id) copy else it }
+        copy
+    }
+
     override fun deleteEmployeeWageHoliday(employeeId: Long, wageId: Long, id: Long): Completable =
             Completable.fromAction {
                 wages[employeeId] = wages[employeeId]?.map {
                     if (it.id == wageId)
                         it.copy(
-                            holidays = it.holidays?.filter { it.id != id }
+                                holidays = it.holidays?.filter { it.id != id }
                         )
                     else it
                 }.orEmpty()
             }
 
-    override fun addEmployeeWageHoliday(employeeId: Long, wageId: Long, holiday: Holiday): Single<Holiday> =
+    override fun addEmployeeWageHoliday(
+            employeeId: Long,
+            wageId: Long,
+            startDate: Date,
+            type: String,
+            duration: Int
+    ): Single<Holiday> =
             Single.fromCallable {
-                val copy = holiday.copy(
-                        id = (wages.values.asSequence().flatten().map { it.holidays.orEmpty() }.flatten().map { it.id }.max() ?: 0) + 1
+                val new = Holiday(
+                        id = (wages.values.asSequence().flatten().map { it.holidays.orEmpty() }.flatten().map { it.id }.max() ?: 0) + 1,
+                        startDate = startDate,
+                        type = type,
+                        duration = duration
                 )
                 wages[employeeId] = wages[employeeId]?.map {
                     if (it.id == wageId)
                         it.copy(
-                                holidays = it.holidays.orEmpty().plus(copy)
+                                holidays = it.holidays.orEmpty().plus(new)
                         )
                     else it
                 }.orEmpty()
-                copy
+                new
             }
 
     override fun getEmployeeWage(employeeId: Long, id: Long): Single<Wage> =
@@ -137,7 +200,6 @@ object DataServiceStub : TiimeDataService {
 
     private var me = Associate(
             id = 1,
-            name = "James Bond",
             defaultFromAddress = "Avenue des Champs Elysées, Paris",
             defaultVehicleId = 1,
             vehicles = listOf(
