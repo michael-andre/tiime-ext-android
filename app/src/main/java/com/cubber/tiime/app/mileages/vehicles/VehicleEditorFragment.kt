@@ -164,7 +164,6 @@ class VehicleEditorFragment : AppCompatDialogFragment() {
 
         private const val ARG_VEHICLE_ID = "vehicle_id"
         private const val STATE_VEHICLE = "vehicle"
-        private const val REQUEST_ADD_VEHICLE_CARD = 1
 
         fun newInstance(vehicleId: Long) = VehicleEditorFragment().withArguments {
             putLong(ARG_VEHICLE_ID, vehicleId)

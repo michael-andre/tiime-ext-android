@@ -1,6 +1,7 @@
 package com.cubber.tiime.data
 
 import android.arch.paging.ItemKeyedDataSource
+import android.util.Log
 import com.cubber.tiime.model.Wage
 import com.cubber.tiime.utils.Month
 import com.cubber.tiime.utils.month
@@ -54,8 +55,9 @@ class WagesSource(
 
     private fun load(from: Month, to: Month, callback: LoadCallback<Wage>) {
         repository.getEmployeeWages(employeeId, from, to).subscribe { list, e ->
-            if (list != null) callback.onResult(list)
-        }
+                    if (list != null) callback.onResult(list)
+                    else if (e != null) Log.e("WagesSource", "Failed to load wages", e)
+                }
     }
 
 }

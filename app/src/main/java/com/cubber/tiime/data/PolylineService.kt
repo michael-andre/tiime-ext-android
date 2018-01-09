@@ -37,8 +37,9 @@ class PolylineService(private val geoApiContext: GeoApiContext) {
                             loadingPolylinesMut.postValue(loadingPolylinesMut.value?.apply { remove(allowance.id) })
                         },
                         onFailure = { e ->
-                            Log.w("AllowancesFragment", "Failed to get directions", e)
-                            loadingPolylinesMut.postValue(loadingPolylinesMut.value?.apply { add(allowance.id) })
+                            Log.w("PolylineService", "Failed to get directions", e)
+                            allowance.polyline = emptyList()
+                            loadingPolylinesMut.postValue(loadingPolylinesMut.value?.apply { remove(allowance.id) })
                         }
                 )
     }

@@ -1,6 +1,7 @@
 package com.cubber.tiime.data
 
 import android.arch.paging.PositionalDataSource
+import android.util.Log
 import com.cubber.tiime.model.MileageAllowance
 
 /**
@@ -17,15 +18,17 @@ class MileageAllowancesSource(
                         invalidate()
                     }
                 }
-                .subscribe { list, error ->
+                .subscribe { list, e ->
                     if (list != null) callback.onResult(list, params.requestedStartPosition)
+                    else if (e != null) Log.e("MileageAllowancesSource", "Failed to load mileages", e)
                 }
     }
 
     override fun loadRange(params: LoadRangeParams, callback: LoadRangeCallback<MileageAllowance>) {
         repository.getMileageAllowances(params.startPosition, count = params.loadSize)
-                .subscribe { list, error ->
+                .subscribe { list, e ->
                     if (list != null) callback.onResult(list)
+                    else if (e != null) Log.e("MileageAllowancesSource", "Failed to load mileages", e)
                 }
     }
 
