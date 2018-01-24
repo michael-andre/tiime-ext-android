@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.Filter
 import android.widget.Filterable
 import com.cubber.tiime.R
-import com.cubber.tiime.databinding.AllowanceHintClientItemBinding
+import com.cubber.tiime.databinding.MileageHintClientItemBinding
 import com.cubber.tiime.model.Client
 import com.cubber.tiime.utils.filterCleaned
 import com.wapplix.recycler.BindingListAdapter
@@ -17,7 +17,7 @@ import java.util.*
  * Created by mike on 28/09/17.
  */
 
-class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filterable {
+class MileagesHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filterable {
 
     private val filter = HintsFilter()
     private var clients: List<Client>? = null
@@ -27,7 +27,7 @@ class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filtera
     override fun getItemViewType(position: Int): Int {
         val item = getItem(position)
         return if (item is Client) {
-            R.layout.allowance_hint_client_item
+            R.layout.mileage_hint_client_item
         } else super.getItemViewType(position)
     }
 
@@ -36,7 +36,7 @@ class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filtera
     }
 
     override fun onBindView(binding: ViewDataBinding, item: Any) {
-        if (binding is AllowanceHintClientItemBinding) {
+        if (binding is MileageHintClientItemBinding) {
             val client = item as Client
             binding.client = client
             binding.getRoot().setOnClickListener { _ -> onClientHintClick?.invoke(client) }
@@ -64,7 +64,7 @@ class AllowanceHintAdapter : BindingListAdapter<Any, ViewDataBinding>(), Filtera
             lastQuery = query
             val results = Filter.FilterResults()
             val values = ArrayList<Any>()
-            val clients = this@AllowanceHintAdapter.clients
+            val clients = this@MileagesHintAdapter.clients
             if (clients != null) {
                 if (query == null || query.isEmpty()) {
                     values.addAll(clients)

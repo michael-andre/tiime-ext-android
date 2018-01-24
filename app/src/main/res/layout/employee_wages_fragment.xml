@@ -7,7 +7,7 @@
 
         <variable
             name="wages"
-            type="com.wapplix.binding.ObservablePagedList" />
+            type="android.arch.paging.PagedList" />
 
     </data>
 
@@ -62,6 +62,12 @@
             android:layout_gravity="center"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             app:visible="@{ wages == null }" />
+
+        <ViewStub
+            android:id="@+id/error"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout="@layout/error_placeholder"/>
 
     </android.support.design.widget.CoordinatorLayout>
 

@@ -11,6 +11,7 @@ import com.google.gson.JsonSyntaxException
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
@@ -55,6 +56,11 @@ object ApiServiceBuilder {
                 }
                 .connectTimeout(10, TimeUnit.SECONDS)
                 .readTimeout(40, TimeUnit.SECONDS)
+                .apply {
+                    if (BuildConfig.DEBUG) addInterceptor(HttpLoggingInterceptor().apply {
+                        level = HttpLoggingInterceptor.Level.BODY
+                    })
+                }
                 .build()
         val retrofit = Retrofit.Builder()
                 .baseUrl(API_BASE)

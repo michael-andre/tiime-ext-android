@@ -17,12 +17,10 @@ import com.cubber.tiime.databinding.EmployeeWagesFragmentBinding
 import com.cubber.tiime.model.Holiday
 import com.cubber.tiime.model.Wage
 import com.cubber.tiime.utils.Intents
+import com.cubber.tiime.utils.Month
+import com.cubber.tiime.utils.bindState
 import com.cubber.tiime.utils.showErrorSnackbar
-import com.wapplix.arch.UiModel
-import com.wapplix.arch.getUiModel
-import com.wapplix.arch.observe
-import com.wapplix.arch.show
-import com.wapplix.binding.toObservable
+import com.wapplix.arch.*
 import com.wapplix.recycler.AutoGridLayoutManager
 import com.wapplix.showSnackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -59,8 +57,11 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
         vm.init(employeeId)
 
         observe(vm.wages) {
-            binding.wages = it?.toObservable()
+            binding.wages = it
             binding.refreshLayout.isRefreshing = false
+        }
+        observe(vm.wagesSource.state) {
+            binding.error.bindState(it)
         }
 
         return binding.root
@@ -98,14 +99,16 @@ class EmployeeWagesFragment : Fragment(), WagesAdapter.Listener {
         private val dataRepository = DataRepository.of(getApplication())
 
         private var employeeId: Long = 0
+        lateinit var wagesSource: StatefulDataSourceFactory<Month, Wage>
         lateinit var wages: LiveData<PagedList<Wage>>
         var expandedIds = LongSparseArray<Boolean>()
 
         fun init(employeeId: Long) {
             this.employeeId = employeeId
-            if (!this@VM::wages.isInitialized) {
+            if (!this@VM::wagesSource.isInitialized) {
+                wagesSource = dataRepository.getEmployeeWagesSource(employeeId)
                 wages = LivePagedListBuilder(
-                        dataRepository.getEmployeeWagesSource(employeeId),
+                        wagesSource,
                         PagedList.Config.Builder()
                                 .setPageSize(6)
                                 .setEnablePlaceholders(false)

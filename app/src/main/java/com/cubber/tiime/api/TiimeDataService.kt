@@ -134,7 +134,7 @@ interface TiimeDataService {
             @Body holiday: Holiday
     ): Single<Holiday>*/
 
-    @POST("employees/{employeeId}/wages/{wageId}")
+    @POST("employees/{employeeId}/wages/{wageId}/holidays")
     @FormUrlEncoded
     fun addEmployeeWageHoliday(
             @Path("employeeId") employeeId: Long,

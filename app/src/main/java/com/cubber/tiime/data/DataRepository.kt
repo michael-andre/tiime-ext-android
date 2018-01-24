@@ -11,6 +11,7 @@ import com.cubber.tiime.api.retrofit.UriContentBody
 import com.cubber.tiime.auth.AuthManager
 import com.cubber.tiime.model.*
 import com.cubber.tiime.utils.Month
+import com.wapplix.arch.StatefulDataSourceFactory
 import com.wapplix.arch.toLiveData
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -34,11 +35,8 @@ class DataRepository(
         vehiclesUpdate.subscribe { n -> Log.i("DR", "Subject:" + n.toString()) }
     }
 
-    private val apiService = ApiServiceBuilder.createDataService(accessToken) /*Retrofit.Builder()
-            .addConverterFactory(GsonConverterFactory.create())
-            .addCallAdapterFactory(RxJava2CallAdapterFactory.createAsync())
-            .build()
-            .create(TiimeDataService::class.java)*/
+    private val apiService = ApiServiceBuilder.createDataService(accessToken)
+    //private val apiService = DataServiceStub
 
     private inline fun <T> Observable<out Any>.mapUpdates(crossinline service: () -> Single<T>): Observable<T> =
             this.flatMapSingle { service() }
@@ -49,7 +47,7 @@ class DataRepository(
     fun activeVehicles() =
             vehiclesUpdate.mapUpdates {
                 apiService.getAssociate()
-                        .map { it.vehicles.filter { it.deletionDate == null  } }
+                        .map { it.vehicles.filter { it.deletionDate == null } }
             }
 
     fun associate(): LiveData<Associate> = apiService.getAssociate().toLiveData()
@@ -92,10 +90,17 @@ class DataRepository(
 
     fun getEmployeeWages(employeeId: Long, from: Month?, to: Month?): Single<List<Wage>> =
             apiService.getEmployeeWages(employeeId, from, to)
-                    .map { it.wages ?: emptyList() }
+                    .map {
+                        //TODO: Remove redundant filter when implemented server-side
+                        it.wages?.filter {
+                            it.period?.before(from) == false
+                            && it.period?.after(to) == false
+                        } ?: emptyList()
+                    }
 
-    fun getEmployeeWagesSource(employeeId: Long) = DataSource.Factory<Month, Wage> {
-        WagesSource(this, employeeId)
+    fun getEmployeeWagesSource(employeeId: Long) = object : StatefulDataSourceFactory<Month, Wage>() {
+        override fun create(): DataSource<Month, Wage>
+                = WagesSource(this@DataRepository, employeeId, internalState)
     }
 
     fun wage(employeeId: Long, id: Long) =
@@ -119,8 +124,9 @@ class DataRepository(
             apiService.getAssociateMileages(start, count)
                     .map { it.mileages ?: emptyList() }
 
-    fun getMileageAllowances() = DataSource.Factory<Int, MileageAllowance> {
-        MileageAllowancesSource(this)
+    fun getMileageAllowances() = object : StatefulDataSourceFactory<Int, MileageAllowance>() {
+        override fun create(): DataSource<Int, MileageAllowance>
+                = MileageAllowancesSource(this@DataRepository, internalState)
     }
 
     fun addMileageAllowances(allowanceRequest: MileageAllowanceRequest): Single<List<MileageAllowance>> =
@@ -142,7 +148,9 @@ class DataRepository(
 
         fun of(context: Context, account: String? = null): DataRepository {
             val active = AuthManager.getActiveAccount(context) ?: error("No default account")
-            return repositories.getOrPut(active) { DataRepository(AuthManager.getAccessToken(context, active), context.contentResolver) }
+            return repositories.getOrPut(active) {
+                DataRepository(AuthManager.getAccessToken(context, active), context.contentResolver)
+            }
         }
     }
 

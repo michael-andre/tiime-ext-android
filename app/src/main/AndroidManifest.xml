@@ -34,7 +34,7 @@
             android:windowSoftInputMode="adjustResize|stateAlwaysVisible"/>
 
         <activity
-            android:name=".app.mileages.AllowanceActivity"
+            android:name=".app.mileages.MileagesActivity"
             android:theme="@style/AppTheme.DialogWhenLarge" />
 
         <meta-data

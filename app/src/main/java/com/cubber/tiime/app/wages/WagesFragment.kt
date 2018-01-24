@@ -53,7 +53,9 @@ class WagesFragment : Fragment() {
 
     private inner class Adapter(fm: FragmentManager) : FragmentStateListAdapter<Employee>(fm) {
 
-        private val indicatorSpan by lazy { ImageSpan(context, R.drawable.indicator_action_required_small, ImageSpan.ALIGN_BASELINE) }
+        private val indicatorSpan by lazy {
+            ImageSpan(context, R.drawable.indicator_action_required_small, ImageSpan.ALIGN_BASELINE)
+        }
 
         override fun onCreateFragment(item: Employee)
                 = EmployeeWagesFragment.newInstance(item.id)

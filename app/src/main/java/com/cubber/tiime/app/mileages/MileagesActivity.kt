@@ -21,7 +21,7 @@ import android.view.inputmethod.EditorInfo
 import com.cubber.tiime.R
 import com.cubber.tiime.app.mileages.vehicles.VehiclePickerFragment
 import com.cubber.tiime.data.DataRepository
-import com.cubber.tiime.databinding.AllowanceActivityBinding
+import com.cubber.tiime.databinding.MileageActivityBinding
 import com.cubber.tiime.model.*
 import com.cubber.tiime.utils.*
 import com.google.android.gms.location.places.Places
@@ -40,23 +40,23 @@ import kotlin.collections.HashSet
 /**
  * An activity to create and save a new [MileageAllowance] item.
  */
-class AllowanceActivity : AppCompatActivity() {
+class MileagesActivity : AppCompatActivity() {
 
     private lateinit var vm: VM
-    private lateinit var binding: AllowanceActivityBinding
+    private lateinit var binding: MileageActivityBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         vm = getUiModel()
 
-        binding = setContentViewBinding(R.layout.allowance_activity)
-        binding.addOnRebindCallback(object : OnRebindCallback<AllowanceActivityBinding>() {
+        binding = setContentViewBinding(R.layout.mileage_activity)
+        binding.addOnRebindCallback(object : OnRebindCallback<MileageActivityBinding>() {
 
             private var mapHelper = PolylineMapHelper(binding.map)
-            private var mapOptionsFactory = PolylineMapOptionsFactory(this@AllowanceActivity)
+            private var mapOptionsFactory = PolylineMapOptionsFactory(this@MileagesActivity)
 
-            override fun onBound(binding: AllowanceActivityBinding) {
+            override fun onBound(binding: MileageActivityBinding) {
                 val polyline = binding.allowance?.polyline
                 mapHelper.applyOptions(if (polyline != null) mapOptionsFactory.create(polyline) else null)
             }
@@ -73,7 +73,7 @@ class AllowanceActivity : AppCompatActivity() {
         }
 
         // Purpose/client hints
-        val hintsAdapter = AllowanceHintAdapter()
+        val hintsAdapter = MileagesHintAdapter()
         binding.hints.adapter = hintsAdapter
         binding.purpose.addTextChangedListener(afterTextChanged = {
             hintsAdapter.filter.filter(binding.purpose.text)
@@ -210,7 +210,7 @@ class AllowanceActivity : AppCompatActivity() {
         vm.cardProcessing.observe(this, Observer { binding.cardProcessing = it ?: false })
     }
 
-    private fun expandAddresses(b: AllowanceActivityBinding) {
+    private fun expandAddresses(b: MileageActivityBinding) {
         b.locationStartIcon.visibility = View.VISIBLE
         b.fromAddress.visibility = View.VISIBLE
         b.toAddress.visibility = View.VISIBLE
@@ -260,7 +260,7 @@ class AllowanceActivity : AppCompatActivity() {
         return true
     }
 
-    class VM(application: Application) : UiModel<AllowanceActivity>(application) {
+    class VM(application: Application) : UiModel<MileagesActivity>(application) {
 
         val purposeHintsShown = MutableLiveData<Boolean>()
 
@@ -430,7 +430,7 @@ class AllowanceActivity : AppCompatActivity() {
     companion object {
 
         fun newIntent(context: Context): Intent {
-            return Intent(context, AllowanceActivity::class.java)
+            return Intent(context, MileagesActivity::class.java)
         }
     }
 

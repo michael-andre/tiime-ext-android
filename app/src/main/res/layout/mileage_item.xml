@@ -10,7 +10,7 @@
             type="com.cubber.tiime.utils.Formats" />
 
         <variable
-            name="allowance"
+            name="mileageAllowance"
             type="com.cubber.tiime.model.MileageAllowance" />
 
         <variable
@@ -69,7 +69,7 @@
                 android:layout_marginTop="@dimen/spacing"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="@{ allowance.purpose }"
+                android:text="@{ mileageAllowance.purpose }"
                 android:textAppearance="?textAppearanceListItem"
                 app:layout_constraintEnd_toStartOf="@id/distance"
                 app:layout_constraintStart_toStartOf="parent"
@@ -83,7 +83,7 @@
                 android:layout_marginBottom="@dimen/spacing"
                 android:ellipsize="end"
                 android:maxLines="1"
-                android:text="@{ f.fullDateFormat.format(allowance.tripDate) }"
+                android:text="@{ f.fullDateFormat.format(mileageAllowance.tripDate) }"
                 android:textAppearance="?android:textAppearanceSmall"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="@id/purpose"
@@ -97,7 +97,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="?listPreferredItemPaddingRight"
                 android:layout_marginRight="?listPreferredItemPaddingRight"
-                android:text="@{ @string/distance_format(allowance.distance) }"
+                android:text="@{ @string/distance_format(mileageAllowance.distance) }"
                 android:textAppearance="?textAppearanceListItem"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

@@ -446,7 +446,7 @@
             android:visibility="gone"
             app:layoutManager="android.support.v7.widget.LinearLayoutManager"
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
-            tools:listitem="@layout/allowance_hint_client_item" />
+            tools:listitem="@layout/mileage_hint_client_item" />
 
     </android.support.design.widget.CoordinatorLayout>
 </layout>

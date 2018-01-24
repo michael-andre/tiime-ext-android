@@ -89,4 +89,5 @@
     <string name="username">Identifiant</string>
     <string name="login_failed">La connexion a échoué.</string>
     <string name="invalid_credentials">Identifiants incorrects</string>
+    <string name="retry">Réessayer</string>
 </resources>

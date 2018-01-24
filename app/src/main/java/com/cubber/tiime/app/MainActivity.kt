@@ -18,7 +18,7 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import com.cubber.tiime.R
-import com.cubber.tiime.app.mileages.AllowancesFragment
+import com.cubber.tiime.app.mileages.MileagesFragment
 import com.cubber.tiime.app.wages.WagesFragment
 import com.cubber.tiime.auth.AuthManager
 import com.cubber.tiime.data.DataRepository
@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun showSection(@IdRes id: Int) {
         when (id) {
-            R.id.mileage_allowances -> showSection(AllowancesFragment::class.java)
+            R.id.mileage_allowances -> showSection(MileagesFragment::class.java)
             R.id.social -> showSection(WagesFragment::class.java)
         }
     }
