@@ -15,10 +15,8 @@ import com.cubber.tiime.R
 import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.databinding.WagesFragmentBinding
 import com.cubber.tiime.model.Employee
-import com.wapplix.arch.UiModel
-import com.wapplix.arch.getUiModel
-import com.wapplix.arch.observe
-import com.wapplix.arch.toLiveData
+import com.cubber.tiime.utils.bindState
+import com.wapplix.arch.*
 import com.wapplix.pager.FragmentStateListAdapter
 
 
@@ -46,6 +44,9 @@ class WagesFragment : Fragment() {
         val vm: VM = getUiModel()
         observe(vm.employees) {
             binding.employees = it
+        }
+        observe(vm.employees.state) {
+            binding.error.bindState(it)
         }
 
         return binding.root
@@ -75,7 +76,7 @@ class WagesFragment : Fragment() {
 
     class VM(application: Application) : UiModel<WagesFragment>(application) {
 
-        var employees = DataRepository.of(getApplication()).employees().toLiveData()
+        var employees = DataRepository.of(getApplication()).employees().toStatefulLiveData()
 
     }
 

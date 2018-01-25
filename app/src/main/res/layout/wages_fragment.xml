@@ -73,6 +73,13 @@
             app:layout_behavior="@string/appbar_scrolling_view_behavior"
             app:visible="@{ employees == null }" />
 
+        <ViewStub
+            android:id="@+id/error"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout="@layout/error_placeholder"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+
     </android.support.design.widget.CoordinatorLayout>
 
 </layout>

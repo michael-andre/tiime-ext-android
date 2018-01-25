@@ -13,6 +13,7 @@ import com.cubber.tiime.R
 import com.cubber.tiime.data.DataRepository
 import com.cubber.tiime.data.PolylineService
 import com.cubber.tiime.databinding.MileagesFragmentBinding
+import com.cubber.tiime.utils.bindState
 import com.wapplix.arch.UiModel
 import com.wapplix.arch.getUiModel
 import com.wapplix.arch.observe
@@ -42,6 +43,9 @@ class MileagesFragment : Fragment() {
             binding.mileages = it
             binding.refreshLayout.isRefreshing = false
         }
+        observe(vm.mileagesSource.state) {
+            binding.error.bindState(it)
+        }
         observe(PolylineService.getInstance(context!!).loadingPolylines) {
             adapter.loadingPolylines = it
         }
@@ -53,8 +57,9 @@ class MileagesFragment : Fragment() {
 
         private val dataRepository = DataRepository.of(getApplication())
 
-        internal var mileages = LivePagedListBuilder(
-                dataRepository.getMileageAllowances(),
+        val mileagesSource = dataRepository.getMileageAllowances()
+        var mileages = LivePagedListBuilder(
+                mileagesSource,
                 PagedList.Config.Builder()
                         .setPageSize(20)
                         .setEnablePlaceholders(false)
