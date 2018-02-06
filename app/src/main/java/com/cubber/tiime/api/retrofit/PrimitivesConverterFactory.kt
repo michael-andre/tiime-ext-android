@@ -45,7 +45,7 @@ class PrimitivesConverterFactory(gson: Gson) : Converter.Factory() {
     override fun stringConverter(type: Type?, annotations: Array<Annotation>?, retrofit: Retrofit?): Converter<*, String>? {
 
         // Forward primitive, Date and String to Gson for encoding as multipart fields
-        return if (type === Date::class.java || type === String::class.java || type is Class<*> && type.isPrimitive) {
+        return if (type is Class<*> && Date::class.java.isAssignableFrom(type) || type === String::class.java || type is Class<*> && type.isPrimitive) {
             stringConverter
         } else if (annotations?.any { it is CommaSeparated } == true && type is ParameterizedType && Iterable::class.java.isAssignableFrom(type as Class<*>)) {
             stringIterableConverter

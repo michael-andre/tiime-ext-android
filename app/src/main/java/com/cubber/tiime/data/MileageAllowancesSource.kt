@@ -2,6 +2,7 @@ package com.cubber.tiime.data
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.paging.PositionalDataSource
+import android.util.Log
 import com.cubber.tiime.model.MileageAllowance
 import com.wapplix.arch.Error
 import com.wapplix.arch.Loading
@@ -31,6 +32,7 @@ class MileageAllowancesSource(
             callback.onResult(data, 0)
             disp.add(repository.allowancesUpdate.firstElement().subscribe { invalidate() })
         } catch (e: Exception) {
+            Log.e(MileageAllowancesSource::class.java.simpleName, "Failed to load mileage allowances", e)
             state.postValue(Error(e) { loadInitial(params, callback) })
         }
     }
@@ -43,6 +45,7 @@ class MileageAllowancesSource(
                         state.postValue(Success)
                         callback.onResult(list)
                     } else if (e != null) {
+                        Log.e(MileageAllowancesSource::class.java.simpleName, "Failed to load mileage allowances", e)
                         state.postValue(Error(e) { loadRange(params, callback) })
                     }
                 }

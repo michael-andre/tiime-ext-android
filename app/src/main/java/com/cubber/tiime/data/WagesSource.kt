@@ -2,6 +2,7 @@ package com.cubber.tiime.data
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.paging.ItemKeyedDataSource
+import android.util.Log
 import com.cubber.tiime.model.Wage
 import com.cubber.tiime.utils.Month
 import com.cubber.tiime.utils.month
@@ -49,6 +50,7 @@ class WagesSource(
             callback.onResult(wages)
             disp.add(repository.wagesUpdate.subscribe { invalidate() })
         } catch (e: Exception) {
+            Log.e(WagesSource::class.java.simpleName, "Failed to load wages", e)
             state.postValue(Error(e) { loadInitial(params, callback) })
         }
     }
@@ -80,6 +82,7 @@ class WagesSource(
                 state.postValue(Success)
                 callback.onResult(list)
             } else if (e != null) {
+                Log.e(WagesSource::class.java.simpleName, "Failed to load wages", e)
                 state.postValue(Error(e) { load(from, to, callback) })
             }
         })
