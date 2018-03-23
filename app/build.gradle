@@ -42,7 +42,7 @@ androidExtensions {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     def support_library_version = '27.1.0'
-    def play_services_version = '11.8.0'
+    def play_services_version = '12.0.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.android.support:appcompat-v7:$support_library_version"
     implementation "com.android.support:design:$support_library_version"

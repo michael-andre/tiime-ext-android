@@ -14,7 +14,6 @@ import android.view.ViewGroup
 abstract class BindingPagedListAdapter<T, VDB : ViewDataBinding> : PagedListAdapter<T, BindingViewHolder<VDB>> {
 
     constructor(diffCallback: DiffCallback<T>) : super(diffCallback)
-    constructor(config: ListAdapterConfig<T>) : super(config)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BindingViewHolder<VDB> {
         return BindingViewHolder(onCreateViewBinding(LayoutInflater.from(parent.context), parent, viewType))

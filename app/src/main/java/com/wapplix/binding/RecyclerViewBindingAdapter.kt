@@ -16,7 +16,7 @@ fun <T> setItems(recyclerView: RecyclerView, list: ObservablePagedList<T>?) {
     val adapter = recyclerView.adapter
     if (adapter is PagedListAdapter<*, *>) {
         @Suppress("unchecked_cast")
-        (adapter as PagedListAdapter<T, *>).setList(list?.pagedList)
+        (adapter as PagedListAdapter<T, *>).submitList(list?.pagedList)
     }
 }
 
@@ -25,7 +25,7 @@ fun <T> setItems(recyclerView: RecyclerView, list: PagedList<T>?) {
     val adapter = recyclerView.adapter
     if (adapter is PagedListAdapter<*, *>) {
         @Suppress("unchecked_cast")
-        (adapter as PagedListAdapter<T, *>).setList(list)
+        (adapter as PagedListAdapter<T, *>).submitList(list)
     }
 }
 

@@ -66,8 +66,8 @@ class WagesAdapter(
         initHolidayDecorators(context)
     }
 
-    override fun setList(pagedList: PagedList<Wage>?) {
-        super.setList(pagedList)
+    override fun submitList(pagedList: PagedList<Wage>?) {
+        super.submitList(pagedList)
         // Reset all days in decorators
         holidayDecorators.forEach { it.value.days.clear() }
         // Populate decorators with holidays
